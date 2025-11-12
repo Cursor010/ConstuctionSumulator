@@ -56,7 +56,11 @@ void CellWidget::paintEvent(QPaintEvent* event)
                 painter.setPen(QPen(Qt::black, 2));
                 painter.drawRect(rect().adjusted(15, 15, -15, -15));
 
+<<<<<<< HEAD
                 // Отображаем этап строительства
+=======
+                // Отображаем этап строительства (теперь начинается с 1)
+>>>>>>> front
                 painter.setPen(Qt::white);
                 QString progressText = QString("%1/%2").arg(building->getMonthsBuilt()).arg(building->getBuildTime());
                 painter.drawText(rect(), Qt::AlignCenter, progressText);
@@ -66,7 +70,11 @@ void CellWidget::paintEvent(QPaintEvent* event)
                 painter.setPen(QPen(Qt::black, 2));
                 painter.drawEllipse(rect().adjusted(15, 15, -15, -15));
 
+<<<<<<< HEAD
                 // Отображаем этап строительства
+=======
+                // Отображаем этап строительства (теперь начинается с 1)
+>>>>>>> front
                 painter.setPen(Qt::white);
                 QString progressText = QString("%1/%2").arg(building->getMonthsBuilt()).arg(building->getBuildTime());
                 painter.drawText(rect(), Qt::AlignCenter, progressText);

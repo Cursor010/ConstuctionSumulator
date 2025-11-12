@@ -3,6 +3,15 @@
 
 #include <QColor>
 
+<<<<<<< HEAD
+=======
+const int HOUSE_COST = 8000000;
+const int MARKET_COST = 2500000;
+const int HOUSE_BUILD_TIME = 6;
+const int MARKET_BUILD_TIME = 3;
+const int INITIAL_MONEY = 37000000;
+
+>>>>>>> front
 class Building {
 public:
     enum Type {
@@ -11,7 +20,11 @@ public:
         MARKET
     };
 
+<<<<<<< HEAD
     Building(Type t, int owner, int buildTime, int buildingCost, QColor color);
+=======
+    Building(Type t, int owner, int buildTime, int buildingCost, QColor color, int cellIndex);
+>>>>>>> front
 
     // Геттеры
     Type getType() const { return type; }
@@ -24,6 +37,10 @@ public:
     int getCost() const { return cost; }
     int getTotalApartments() const { return totalApartments; }
     int getSoldApartments() const { return soldApartments; }
+<<<<<<< HEAD
+=======
+    int getCellIndex() const { return cellIndex; }
+>>>>>>> front
 
     // Сеттеры
     void setSoldApartments(int sold) { soldApartments = sold; }
@@ -43,6 +60,10 @@ private:
     int totalApartments;
     int soldApartments;
     QColor ownerColor;
+<<<<<<< HEAD
+=======
+    int cellIndex;
+>>>>>>> front
 };
 
 #endif

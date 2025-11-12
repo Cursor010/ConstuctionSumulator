@@ -23,6 +23,12 @@ public:
     GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent = nullptr);
     ~GameWindow();
 
+<<<<<<< HEAD
+=======
+signals:
+    void turnCompleted(); // Сигнал о завершении хода
+
+>>>>>>> front
 private slots:
     void onBuildHouseClicked();
     void onBuildMarketClicked();

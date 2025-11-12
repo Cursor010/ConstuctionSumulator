@@ -9,12 +9,16 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QMessageBox>
+<<<<<<< HEAD
 
 const int HOUSE_COST = 8000000;
 const int MARKET_COST = 2500000;
 const int HOUSE_BUILD_TIME = 6;
 const int MARKET_BUILD_TIME = 3;
 const int INITIAL_MONEY = 37000000;
+=======
+#include <QTimer>
+>>>>>>> front
 
 GameWindow::GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent)
     : QWidget(parent), mainWindow(mainWindow), totalMonths(totalMonths), currentMonth(0),
@@ -145,6 +149,11 @@ void GameWindow::nextPlayer()
     buildingTypeToBuild = Building::NO_BUILDING;
     updateGameState();
     resetCellHighlights();
+<<<<<<< HEAD
+=======
+
+    emit turnCompleted(); // Уведомляем о завершении хода
+>>>>>>> front
 }
 
 void GameWindow::endGame()
@@ -173,7 +182,13 @@ void GameWindow::endGame()
 
 void GameWindow::backToMainMenu()
 {
+<<<<<<< HEAD
     mainWindow->show();
+=======
+    if (mainWindow) {
+        mainWindow->show();
+    }
+>>>>>>> front
     this->close();
 }
 
@@ -233,10 +248,27 @@ void GameWindow::onCellClicked(int cellIndex)
 
             QString buildingName = (newBuilding->getType() == Building::HOUSE) ? "дом" : "магазин";
             int totalStages = (newBuilding->getType() == Building::HOUSE) ? HOUSE_BUILD_TIME : MARKET_BUILD_TIME;
+<<<<<<< HEAD
             QMessageBox::information(this, "Успех",
                                      QString("Начато строительство %1!\nЭтап: 1/%2")
                                          .arg(buildingName)
                                          .arg(totalStages));
+=======
+
+            // Показываем сообщение и автоматически переходим к следующему игроку
+            QMessageBox* msgBox = new QMessageBox(this);
+            msgBox->setWindowTitle("Успех");
+            msgBox->setText(QString("Начато строительство %1!\nЭтап: 0/%2\nХод переходит следующему игроку.")
+                                .arg(buildingName)
+                                .arg(totalStages));
+            msgBox->setAttribute(Qt::WA_DeleteOnClose);
+
+            // Используем таймер для автоматического закрытия сообщения и перехода хода
+            QTimer::singleShot(1500, msgBox, &QMessageBox::accept);
+            QTimer::singleShot(1500, this, &GameWindow::nextPlayer);
+
+            msgBox->exec();
+>>>>>>> front
         }
     }
 }
