@@ -37,14 +37,24 @@ struct Building {
     double soldArea = 0.0;
     double pricePerSqm = 0.0;
     double advertisingBudget = 0.0;
+    double currentMonthAdBudget = 0.0;
+    double previousMonthAdBudget = 0.0;
 
     // Для супермаркетов
     double monthlyRevenue = 0.0;
     double marketAdvertisingBudget = 0.0;
+    double currentMonthMarketAdBudget = 0.0;
 
     // Финансы строительства
     double totalSpent = 0.0;
     double monthlyPayment = 0.0;
+};
+
+struct PlayerDecision {
+    std::vector<int> constructionCells;
+    std::map<int, double> houseAdvertising; // cellId -> budget
+    std::map<int, double> supermarketAdvertising; // cellId -> budget
+    std::map<int, double> housePrices; // cellId -> price per sqm
 };
 
 class Player {
@@ -91,10 +101,7 @@ public:
     void processMonthlyPayments() {
         if (isBankrupt) return;
 
-        // Сначала получаем доходы
-        double monthlyIncome = 0.0;
-
-        // Затем оплачиваем строительство
+        // Оплачиваем строительство
         for (auto& building : buildings) {
             if (!building.isCompleted) {
                 if (money >= building.monthlyPayment) {
@@ -108,13 +115,12 @@ public:
                     }
                 } else {
                     // Не хватает денег на этот месяц - строительство замедляется
-                    // Но не останавливается полностью
                     if (money > building.monthlyPayment * 0.3) {
                         // Можем заплатить часть
-                        double partialPayment = money * 0.5; // Оставляем немного на другие нужды
+                        double partialPayment = money * 0.5;
                         money -= partialPayment;
                         building.totalSpent += partialPayment;
-                        building.progress += 0.5; // Половина прогресса
+                        building.progress += 0.5;
                         std::cout << "Player " << id << " made partial payment on building" << std::endl;
                     } else {
                         std::cout << "Player " << id << " cannot continue construction due to lack of funds" << std::endl;
@@ -130,6 +136,48 @@ public:
         }
     }
 
+    void applyAdvertising(const PlayerDecision& decision) {
+        if (isBankrupt) return;
+
+        // Применяем рекламу для домов
+        for (auto& building : buildings) {
+            if (building.type != BuildingType::SUPERMARKET) {
+                auto it = decision.houseAdvertising.find(building.cellId);
+                if (it != decision.houseAdvertising.end()) {
+                    double adBudget = it->second;
+                    if (money >= adBudget) {
+                        // Обновляем историю рекламных бюджетов
+                        building.previousMonthAdBudget = building.currentMonthAdBudget;
+                        building.currentMonthAdBudget = adBudget;
+                        building.advertisingBudget += adBudget;
+                        money -= adBudget;
+                        totalAdvertisingCost += adBudget;
+                        std::cout << "Player " << id << " spent " << adBudget << " on house advertising" << std::endl;
+                    }
+                }
+
+                // Применяем цены на жилье
+                auto priceIt = decision.housePrices.find(building.cellId);
+                if (priceIt != decision.housePrices.end()) {
+                    building.pricePerSqm = priceIt->second;
+                }
+            } else {
+                // Применяем рекламу для супермаркетов
+                auto it = decision.supermarketAdvertising.find(building.cellId);
+                if (it != decision.supermarketAdvertising.end()) {
+                    double adBudget = it->second;
+                    if (money >= adBudget) {
+                        building.currentMonthMarketAdBudget = adBudget;
+                        building.marketAdvertisingBudget += adBudget;
+                        money -= adBudget;
+                        totalAdvertisingCost += adBudget;
+                        std::cout << "Player " << id << " spent " << adBudget << " on supermarket advertising" << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
     double getTotalCapital() const {
         if (isBankrupt) return 0.0;
 
@@ -138,18 +186,15 @@ public:
         for (const auto& building : buildings) {
             if (building.type == BuildingType::SUPERMARKET) {
                 if (building.isCompleted) {
-                    capital += building.cost * 1.6; // Стоимость на 60% выше
+                    capital += building.cost * 1.6;
                 } else {
-                    // Стоимость незавершенного строительства
                     capital += building.totalSpent;
                 }
-            } else { // Дом
+            } else {
                 if (building.isCompleted) {
                     double unsoldArea = building.totalArea - building.soldArea;
                     double costPerSqm = building.cost / building.totalArea;
-                    capital += unsoldArea * costPerSqm; // Непроданное жилье по себестоимости
-                    // Также добавляем стоимость проданной площади по себестоимости
-                    // так как выручка уже в деньгах
+                    capital += unsoldArea * costPerSqm;
                 } else {
                     capital += building.totalSpent;
                 }
@@ -195,7 +240,12 @@ public:
 
             // Модификаторы спроса
             double demandModifier = 1.0;
-            demandModifier += building.advertisingBudget * 0.005; // 0.5% за 1 тыс. у.е.
+
+            // Рекламный модификатор: каждая 1 тыс. у.е. увеличивает объем продаж на 0.5%
+            // Учитываем рекламу этого и предыдущего месяца
+            double adModifier = (building.currentMonthAdBudget + building.previousMonthAdBudget) * 0.005 / 1000.0;
+            demandModifier += adModifier;
+
             demandModifier += competitionModifier * 0.1;
 
             double effectiveDemand = baseDemand * demandModifier;
@@ -207,6 +257,11 @@ public:
 
             building.soldArea += result.soldArea;
             player.addRevenue(result.revenue);
+
+            if (result.soldArea > 0) {
+                std::cout << "Player " << player.id << " sold " << result.soldArea
+                    << " sqm for " << result.revenue << " (ad modifier: " << adModifier << ")" << std::endl;
+            }
         }
 
         return result;
@@ -217,11 +272,20 @@ public:
         if (player.isBankrupt || !building.isCompleted) return 0.0;
 
         double revenueModifier = 1.0;
-        revenueModifier += building.marketAdvertisingBudget * 0.06; // 3% за 0.5 тыс. у.е.
+
+        // Рекламный модификатор: каждая 0.5 тыс. у.е. увеличивает прибыль на 3%
+        double adModifier = building.currentMonthMarketAdBudget * 0.03 / 500.0;
+        revenueModifier += adModifier;
+
         revenueModifier += housingModifier * 0.15;
 
         double revenue = baseRevenue * revenueModifier;
         player.addRevenue(revenue);
+
+        if (revenue > 0) {
+            std::cout << "Player " << player.id << " supermarket revenue: " << revenue
+                << " (ad modifier: " << adModifier << ")" << std::endl;
+        }
 
         return revenue;
     }
@@ -306,8 +370,6 @@ public:
         for (int i = 0; i < players.size(); ++i) {
             if (players[i]->isBankrupt) continue;
 
-            // Ограничиваем строительство одной постройкой за ход
-            // Берем только первую ячейку из списка
             if (!constructionData[i].empty()) {
                 int cellId = constructionData[i][0];
 
@@ -345,11 +407,18 @@ public:
         }
     }
 
-    void processMonthlyOperations() {
+    void processMonthlyOperations(const std::vector<PlayerDecision>& decisions) {
         double baseHousingDemand = getHousingDemand();
         double baseMarketRevenue = getMarketRevenue();
 
-        // Сначала все получают доход
+        // Сначала применяем рекламные бюджеты
+        for (int i = 0; i < players.size(); ++i) {
+            if (i < decisions.size()) {
+                players[i]->applyAdvertising(decisions[i]);
+            }
+        }
+
+        // Затем все получают доход
         for (auto& player : players) {
             if (player->isBankrupt) continue;
 
@@ -384,13 +453,31 @@ public:
                 }
             }
         }
+
+        // Обновляем рекламные бюджеты для следующего месяца
+        for (auto& player : players) {
+            for (auto& building : player->buildings) {
+                if (building.type != BuildingType::SUPERMARKET) {
+                    building.previousMonthAdBudget = building.currentMonthAdBudget;
+                    building.currentMonthAdBudget = 0.0;
+                } else {
+                    building.currentMonthMarketAdBudget = 0.0;
+                }
+            }
+        }
     }
 
-    void processMonth(const std::vector<std::vector<int>>& constructionData) {
+    void processMonth(const std::vector<PlayerDecision>& decisions) {
         std::cout << "\n=== Month " << currentMonth + 1 << " ===" << std::endl;
 
+        // Извлекаем данные о строительстве из решений
+        std::vector<std::vector<int>> constructionData;
+        for (const auto& decision : decisions) {
+            constructionData.push_back(decision.constructionCells);
+        }
+
         processConstruction(constructionData);
-        processMonthlyOperations();
+        processMonthlyOperations(decisions);
 
         currentMonth++;
         printGameState();
@@ -443,6 +530,7 @@ public:
             std::cout << "  Money: " << player->money << std::endl;
             std::cout << "  Total Capital: " << player->getTotalCapital() << std::endl;
             std::cout << "  Total Revenue: " << player->totalRevenue << std::endl;
+            std::cout << "  Total Advertising: " << player->totalAdvertisingCost << std::endl;
             if (player->isBankrupt) {
                 std::cout << "  STATUS: BANKRUPT" << std::endl;
                 continue;
@@ -507,47 +595,65 @@ public:
 
 class AIPlayer {
 public:
-    static std::vector<int> getConstructionStrategy(const Game& game, int playerId) {
-        std::vector<int> constructionCells;
+    static PlayerDecision getDecision(const Game& game, int playerId) {
+        PlayerDecision decision;
         const auto& players = game.getPlayers();
 
         if (playerId >= players.size() || players[playerId]->isBankrupt) {
-            return constructionCells;
+            return decision;
         }
 
-        // Стратегия: строить только одну постройку за ход
-        // Сначала проверяем, есть ли уже строящиеся объекты
+        // Стратегия строительства: только одна постройка за ход
         int constructionCount = players[playerId]->getConstructionCount();
-        if (constructionCount > 0) {
-            // Уже есть строящиеся объекты, не строим новый в этот ход
-            return constructionCells;
-        }
+        if (constructionCount == 0) {
+            double availableMoney = players[playerId]->money;
 
-        double availableMoney = players[playerId]->money;
+            // Собираем список свободных клеток
+            std::vector<int> freeCells;
+            for (int i = 0; i < 6; ++i) {
+                for (int j = 0; j < 6; ++j) {
+                    int cellId = i * 6 + j;
+                    if (game.isCellFree(cellId)) {
+                        freeCells.push_back(cellId);
+                    }
+                }
+            }
 
-        // Собираем список свободных клеток
-        std::vector<int> freeCells;
-        for (int i = 0; i < 6; ++i) {
-            for (int j = 0; j < 6; ++j) {
-                int cellId = i * 6 + j;
-                if (game.isCellFree(cellId)) {
-                    freeCells.push_back(cellId);
+            if (!freeCells.empty() && availableMoney > 3000000) {
+                // 40% вероятность построить
+                if (rand() % 100 < 40) {
+                    int randomIndex = rand() % freeCells.size();
+                    decision.constructionCells.push_back(freeCells[randomIndex]);
+                    std::cout << "AI Player " << playerId << " decided to build in cell " << freeCells[randomIndex] << std::endl;
                 }
             }
         }
 
-        if (freeCells.empty()) {
-            return constructionCells;
+        // Стратегия рекламы
+        double availableMoney = players[playerId]->money;
+
+        // Реклама для домов: тратим до 10% от доступных денег
+        for (const auto& building : players[playerId]->buildings) {
+            if (building.type != BuildingType::SUPERMARKET && building.isCompleted) {
+                // 50% вероятность потратить на рекламу дома
+                if (rand() % 100 < 50 && availableMoney > 100000) {
+                    double adBudget = std::min(availableMoney * 0.1, 500000.0); // До 500 тыс.
+                    decision.houseAdvertising[building.cellId] = adBudget;
+                    availableMoney -= adBudget;
+                    std::cout << "AI Player " << playerId << " will spend " << adBudget << " on house advertising" << std::endl;
+                }
+            } else if (building.type == BuildingType::SUPERMARKET && building.isCompleted) {
+                // 60% вероятность потратить на рекламу супермаркета
+                if (rand() % 100 < 60 && availableMoney > 50000) {
+                    double adBudget = std::min(availableMoney * 0.05, 250000.0); // До 250 тыс.
+                    decision.supermarketAdvertising[building.cellId] = adBudget;
+                    availableMoney -= adBudget;
+                    std::cout << "AI Player " << playerId << " will spend " << adBudget << " on supermarket advertising" << std::endl;
+                }
+            }
         }
 
-        // Выбираем случайную свободную клетку с вероятностью 40%
-        if (rand() % 100 < 40 && availableMoney > 3000000) {
-            int randomIndex = rand() % freeCells.size();
-            constructionCells.push_back(freeCells[randomIndex]);
-            std::cout << "AI Player " << playerId << " decided to build in cell " << freeCells[randomIndex] << std::endl;
-        }
-
-        return constructionCells;
+        return decision;
     }
 };
 
@@ -560,16 +666,18 @@ int main() {
 
     std::cout << "=== REAL ESTATE INVESTMENT GAME ===" << std::endl;
     std::cout << "Players: " << numPlayers << ", Months: " << totalMonths << std::endl;
-    std::cout << "AI players can build only ONE building per turn" << std::endl;
+    std::cout << "Advertising rules:" << std::endl;
+    std::cout << "- House advertising: 0.5% sales increase per 1,000 monetary units (affects current and next month)" << std::endl;
+    std::cout << "- Supermarket advertising: 3% profit increase per 500 monetary units" << std::endl;
 
     while (!game.isGameOver()) {
-        std::vector<std::vector<int>> constructionData;
+        std::vector<PlayerDecision> decisions;
 
         for (int i = 0; i < numPlayers; ++i) {
-            constructionData.push_back(AIPlayer::getConstructionStrategy(game, i));
+            decisions.push_back(AIPlayer::getDecision(game, i));
         }
 
-        game.processMonth(constructionData);
+        game.processMonth(decisions);
 
         std::cout << "\nPress Enter to continue to next month...";
         std::cin.get();
@@ -584,7 +692,9 @@ int main() {
     std::cout << "\nFinal Statistics:" << std::endl;
     for (const auto& player : game.getPlayers()) {
         std::cout << "Player " << player->id << ": " << player->getTotalCapital()
-            << (player->isBankrupt ? " (BANKRUPT)" : "") << std::endl;
+            << " (Revenue: " << player->totalRevenue
+            << ", Advertising: " << player->totalAdvertisingCost
+            << (player->isBankrupt ? " BANKRUPT" : "") << ")" << std::endl;
     }
 
     return 0;
