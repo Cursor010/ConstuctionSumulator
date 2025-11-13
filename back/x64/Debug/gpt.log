@@ -1,0 +1,4 @@
+﻿  gpt.cpp
+C:\Users\Nikita\Desktop\C++programs\gpt\gpt.cpp(117,46): warning C4244: +=: преобразование "double" в "int", возможна потеря данных
+C:\Users\Nikita\Desktop\C++programs\gpt\gpt.cpp(555,15): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+  gpt.vcxproj -> C:\Users\Nikita\Desktop\C++programs\gpt\x64\Debug\gpt.exe
