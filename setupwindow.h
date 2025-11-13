@@ -24,14 +24,14 @@ signals:
 private slots:
     void on_playerCountSpin_valueChanged(int value);
     void on_startButton_clicked();
+    void saveCurrentNames(); // Добавляем объявление
 
 private:
     void updateNameFields();
-    void saveCurrentNames();
 
     Ui::SetupWindow *ui;
     MainWindow* mainWindow;
     QStringList savedNames;
 };
 
-#endif // SETUPWINDOW_H
+#endif

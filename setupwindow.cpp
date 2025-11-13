@@ -32,6 +32,13 @@ SetupWindow::SetupWindow(MainWindow* mainWindow, QWidget *parent)
             this, &SetupWindow::on_playerCountSpin_valueChanged);
     connect(ui->startButton, &QPushButton::clicked, this, &SetupWindow::on_startButton_clicked);
 
+    // Подключаем сигналы изменения текста для сохранения имен
+    connect(ui->player1Edit, &QLineEdit::textChanged, this, &SetupWindow::saveCurrentNames);
+    connect(ui->player2Edit, &QLineEdit::textChanged, this, &SetupWindow::saveCurrentNames);
+    connect(ui->player3Edit, &QLineEdit::textChanged, this, &SetupWindow::saveCurrentNames);
+    connect(ui->player4Edit, &QLineEdit::textChanged, this, &SetupWindow::saveCurrentNames);
+    connect(ui->player5Edit, &QLineEdit::textChanged, this, &SetupWindow::saveCurrentNames);
+
     // Инициализируем видимость полей
     updateNameFields();
 }
@@ -65,51 +72,43 @@ void SetupWindow::updateNameFields()
 
     ui->player5Label->setVisible(playerCount >= 5);
     ui->player5Edit->setVisible(playerCount >= 5);
-
-    // Сохраняем текущие имена
-    saveCurrentNames();
 }
 
 void SetupWindow::saveCurrentNames()
 {
+    // Сохраняем текущие имена из ВИДИМЫХ полей
     savedNames.clear();
-    savedNames.append(ui->player1Edit->text());
-    savedNames.append(ui->player2Edit->text());
-    savedNames.append(ui->player3Edit->text());
-    savedNames.append(ui->player4Edit->text());
-    savedNames.append(ui->player5Edit->text());
+
+    if (ui->player1Edit->isVisible()) savedNames.append(ui->player1Edit->text());
+    if (ui->player2Edit->isVisible()) savedNames.append(ui->player2Edit->text());
+    if (ui->player3Edit->isVisible()) savedNames.append(ui->player3Edit->text());
+    if (ui->player4Edit->isVisible()) savedNames.append(ui->player4Edit->text());
+    if (ui->player5Edit->isVisible()) savedNames.append(ui->player5Edit->text());
 }
 
 void SetupWindow::on_startButton_clicked()
 {
+    // Сохраняем имена перед запуском игры
+    saveCurrentNames();
+
     int playerCount = ui->playerCountSpin->value();
 
-    // Проверяем, что все видимые имена заполнены
-    if (playerCount >= 1 && ui->player1Edit->text().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Пожалуйста, заполните имя игрока 1.");
-        return;
+    // Проверяем, что все имена заполнены
+    for (int i = 0; i < playerCount; ++i) {
+        if (i < savedNames.size() && savedNames[i].isEmpty()) {
+            QMessageBox::warning(this, "Ошибка",
+                                 QString("Пожалуйста, заполните имя игрока %1.").arg(i + 1));
+            return;
+        }
     }
-    if (playerCount >= 2 && ui->player2Edit->text().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Пожалуйста, заполните имя игрока 2.");
-        return;
-    }
-    if (playerCount >= 3 && ui->player3Edit->text().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Пожалуйста, заполните имя игрока 3.");
-        return;
-    }
-    if (playerCount >= 4 && ui->player4Edit->text().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Пожалуйста, заполните имя игрока 4.");
-        return;
-    }
-    if (playerCount >= 5 && ui->player5Edit->text().isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Пожалуйста, заполните имя игрока 5.");
+
+    // Проверяем, что количество сохраненных имен совпадает с выбранным количеством игроков
+    if (savedNames.size() != playerCount) {
         return;
     }
 
     int totalMonths = ui->monthsSpin->value();
 
     // Используем сохраненные имена
-    QStringList playerNames = savedNames.mid(0, playerCount);
-
-    emit startGameSignal(playerNames, totalMonths);
+    emit startGameSignal(savedNames, totalMonths);
 }

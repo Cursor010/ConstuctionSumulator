@@ -1,102 +1,115 @@
 #include "gamewindow.h"
+#include "ui_gamewindow.h"
 #include "mainwindow.h"
 #include "player.h"
 #include "cellwidget.h"
 #include "building.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGridLayout>
-#include <QPushButton>
-#include <QLabel>
 #include <QMessageBox>
 #include <QTimer>
+#include <QPainter>
+#include <QPixmap>
 
 GameWindow::GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent)
-    : QWidget(parent), mainWindow(mainWindow), totalMonths(totalMonths), currentMonth(0),
-    currentPlayerIndex(0), currentPlayerHasBuilt(false), buildingTypeToBuild(Building::NO_BUILDING)
+    : QWidget(parent),
+    ui(new Ui::GameWindow),
+    mainWindow(mainWindow),
+    totalMonths(totalMonths),
+    currentMonth(0),
+    currentPlayerIndex(0),
+    currentPlayerHasBuilt(false),
+    buildingTypeToBuild(Building::NO_BUILDING)
 {
+    ui->setupUi(this);
+
     QVector<QColor> playerColors = {Qt::red, Qt::blue, Qt::green, Qt::yellow, Qt::magenta};
+
+    // Проверяем, что имена правильно передаются
     for (int i = 0; i < playerNames.size(); ++i) {
         players.append(new Player(playerNames[i], i, playerColors[i]));
+        qDebug() << "Создан игрок:" << playerNames[i]; // Для отладки
     }
 
-    setupUI();
+    setupGame();
     updateGameState();
 }
 
 GameWindow::~GameWindow()
 {
+    delete ui;
     qDeleteAll(players);
     qDeleteAll(cells);
 }
 
-void GameWindow::setupUI()
+void GameWindow::paintEvent(QPaintEvent* event)
 {
-    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    // Рисуем фон
+    QPainter painter(this);
+    QPixmap background("D:/Prak/grass.jpg");
 
-    infoLabel = new QLabel();
-    QFont infoFont = infoLabel->font();
-    infoFont.setPointSize(14);
-    infoLabel->setFont(infoFont);
-    mainLayout->addWidget(infoLabel);
+    if (!background.isNull()) {
+        // Масштабируем изображение под размер окна
+        painter.drawPixmap(0, 0, width(), height(), background);
+    }
 
-    QGridLayout* gridLayout = new QGridLayout();
+    // Вызываем стандартную отрисовку виджетов
+    QWidget::paintEvent(event);
+}
+
+void GameWindow::setupGame()
+{
+    // Создаем клетки и добавляем их в gridLayout из UI
     for (int i = 0; i < 25; ++i) {
         CellWidget* cell = new CellWidget(i);
         cells.append(cell);
-        gridLayout->addWidget(cell, i / 5, i % 5);
+        ui->gridLayout->addWidget(cell, i / 5, i % 5);
         connect(cell, &CellWidget::cellClicked, this, &GameWindow::onCellClicked);
     }
-    mainLayout->addLayout(gridLayout);
-
-    QHBoxLayout* controlLayout = new QHBoxLayout();
-
-    QPushButton* buildHouseButton = new QPushButton("Построить дом\n(8 млн)");
-    QPushButton* buildMarketButton = new QPushButton("Построить магазин\n(2.5 млн)");
-    QPushButton* skipTurnButton = new QPushButton("Пропустить ход");
-    QPushButton* backButton = new QPushButton("В главное меню");
-
-    connect(buildHouseButton, &QPushButton::clicked, this, &GameWindow::onBuildHouseClicked);
-    connect(buildMarketButton, &QPushButton::clicked, this, &GameWindow::onBuildMarketClicked);
-    connect(skipTurnButton, &QPushButton::clicked, this, &GameWindow::onSkipTurnClicked);
-    connect(backButton, &QPushButton::clicked, this, &GameWindow::backToMainMenu);
-
-    controlLayout->addWidget(buildHouseButton);
-    controlLayout->addWidget(buildMarketButton);
-    controlLayout->addWidget(skipTurnButton);
-    controlLayout->addWidget(backButton);
-
-    mainLayout->addLayout(controlLayout);
-
-    playersInfoLabel = new QLabel();
-    playersInfoLabel->setWordWrap(true);
-    mainLayout->addWidget(playersInfoLabel);
-
-    setLayout(mainLayout);
 }
 
 void GameWindow::updateGameState()
 {
     Player* currentPlayer = players[currentPlayerIndex];
 
-    infoLabel->setText(QString("Ход: %1 | Месяц: %2/%3 | Деньги: %4 у.е.")
-                           .arg(currentPlayer->getName())
-                           .arg(currentMonth + 1)
-                           .arg(totalMonths)
-                           .arg(currentPlayer->getMoney()));
+    ui->infoLabel->setText(QString("Ход: <b>%1</b> | Месяц: %2/%3 | Деньги: <b>%4 у.е.</b>")
+                               .arg(currentPlayer->getName())
+                               .arg(currentMonth + 1)
+                               .arg(totalMonths)
+                               .arg(currentPlayer->getMoney()));
 
-    QString playersInfo = "Состояние игроков:\n";
+    QString playersInfo = "<h3>Статистика игроков:</h3>";
+
     for (Player* player : players) {
-        int capital = player->calculateTotalCapital();
-        playersInfo += QString("%1: %2 у.е. (капитал: %3 у.е.)\n")
+        int completedHouses = 0;
+        int completedMarkets = 0;
+
+        QList<Player::BuildingInfo> buildings = player->getAllBuildings();
+        for (const Player::BuildingInfo& building : buildings) {
+            if (building.isCompleted) {
+                if (building.type == Building::HOUSE) {
+                    completedHouses++;
+                } else if (building.type == Building::MARKET) {
+                    completedMarkets++;
+                }
+            }
+        }
+
+        playersInfo += QString("<div style='margin: 5px; padding: 5px; border: 1px solid %1;'>"
+                               "<b>%2</b><br>"
+                               "Деньги: <b>%3 у.е.</b><br>"
+                               "Готовых домов: <b>%4</b><br>"
+                               "Готовых магазинов: <b>%5</b>"
+                               "</div>")
+                           .arg(player->getColor().name())
                            .arg(player->getName())
                            .arg(player->getMoney())
-                           .arg(capital);
+                           .arg(completedHouses)
+                           .arg(completedMarkets);
     }
-    playersInfoLabel->setText(playersInfo);
+
+    ui->playersInfoLabel->setText(playersInfo);
 
     for (CellWidget* cell : cells) {
-        cell->update();
+        cell->update(); // Используем update() вместо updateCell()
     }
 }
 
@@ -121,11 +134,15 @@ void GameWindow::resetCellHighlights()
 
 void GameWindow::nextPlayer()
 {
+    // Показываем прибыль для зданий текущего игрока перед переходом
+    showMonthlyProfit();
+
     currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
 
     if (currentPlayerIndex == 0) {
         currentMonth++;
 
+        // Обрабатываем месяц для всех игроков
         for (Player* player : players) {
             player->processMonth();
         }
@@ -141,7 +158,23 @@ void GameWindow::nextPlayer()
     updateGameState();
     resetCellHighlights();
 
-    emit turnCompleted(); // Уведомляем о завершении хода
+    // emit turnCompleted(); // Убрал, так как этот сигнал не объявлен
+}
+
+// Добавленная реализация метода showMonthlyProfit
+void GameWindow::showMonthlyProfit()
+{
+    Player* currentPlayer = players[currentPlayerIndex];
+    QList<QPair<int, double>> profits = currentPlayer->getBuildingsMonthlyProfit();
+
+    for (const QPair<int, double>& profit : profits) {
+        int cellIndex = profit.first;
+        double amount = profit.second;
+
+        if (amount != 0) {
+            cells[cellIndex]->showProfit(amount);
+        }
+    }
 }
 
 void GameWindow::endGame()
@@ -165,18 +198,10 @@ void GameWindow::endGame()
                    .arg(winner->calculateTotalCapital());
 
     QMessageBox::information(this, "Конец игры", results);
-    backToMainMenu();
+    on_backButton_clicked();
 }
 
-void GameWindow::backToMainMenu()
-{
-    if (mainWindow) {
-        mainWindow->show();
-    }
-    this->close();
-}
-
-void GameWindow::onBuildHouseClicked()
+void GameWindow::on_buildHouseButton_clicked()
 {
     if (currentPlayerHasBuilt) {
         QMessageBox::information(this, "Информация", "Вы уже построили объект в этом ходу!");
@@ -193,7 +218,7 @@ void GameWindow::onBuildHouseClicked()
     buildingTypeToBuild = Building::HOUSE;
 }
 
-void GameWindow::onBuildMarketClicked()
+void GameWindow::on_buildMarketButton_clicked()
 {
     if (currentPlayerHasBuilt) {
         QMessageBox::information(this, "Информация", "Вы уже построили объект в этом ходу!");
@@ -210,9 +235,17 @@ void GameWindow::onBuildMarketClicked()
     buildingTypeToBuild = Building::MARKET;
 }
 
-void GameWindow::onSkipTurnClicked()
+void GameWindow::on_skipTurnButton_clicked()
 {
     nextPlayer();
+}
+
+void GameWindow::on_backButton_clicked()
+{
+    if (mainWindow) {
+        mainWindow->show();
+    }
+    this->close();
 }
 
 void GameWindow::onCellClicked(int cellIndex)
@@ -231,17 +264,15 @@ void GameWindow::onCellClicked(int cellIndex)
             updateGameState();
 
             QString buildingName = (newBuilding->getType() == Building::HOUSE) ? "дом" : "магазин";
-            int totalStages = (newBuilding->getType() == Building::HOUSE) ? HOUSE_BUILD_TIME : MARKET_BUILD_TIME;
+            int totalStages = (newBuilding->getType() == Building::HOUSE) ? 6 : 5;
 
-            // Показываем сообщение и автоматически переходим к следующему игроку
             QMessageBox* msgBox = new QMessageBox(this);
             msgBox->setWindowTitle("Успех");
-            msgBox->setText(QString("Начато строительство %1!\nЭтап: 0/%2\nХод переходит следующему игроку.")
+            msgBox->setText(QString("Начато строительство %1!\nЭтап: 1/%2\nХод переходит следующему игроку.")
                                 .arg(buildingName)
                                 .arg(totalStages));
             msgBox->setAttribute(Qt::WA_DeleteOnClose);
 
-            // Используем таймер для автоматического закрытия сообщения и перехода хода
             QTimer::singleShot(1500, msgBox, &QMessageBox::accept);
             QTimer::singleShot(1500, this, &GameWindow::nextPlayer);
 

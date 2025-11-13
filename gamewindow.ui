@@ -13,6 +13,12 @@
   <property name="windowTitle">
    <string>Игровое поле</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget#GameWindow {
+    border-image: url(D:/Prak/grass.jpg);
+    }
+   </string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="infoLabel">
@@ -28,26 +34,114 @@
     </widget>
    </item>
    <item>
-    <layout class="QGridLayout" name="gridLayout"/>
+    <layout class="QGridLayout" name="gridLayout">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetFixedSize</enum>
+     </property>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
       <widget class="QPushButton" name="buildHouseButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton#buildHouseButton {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #2196F3, stop: 1 #1976D2);
+         border: 2px solid #0D47A1;
+         border-radius: 10px;
+         color: white;
+         font-weight: bold;
+         font-size: 14px;
+         padding: 12px 16px;
+         min-width: 140px;
+         min-height: 50px;
+         }
+
+         QPushButton#buildHouseButton:hover {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #42A5F5, stop: 1 #1E88E5);
+         border: 2px solid #1565C0;
+         }
+
+         QPushButton#buildHouseButton:pressed {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #1976D2, stop: 1 #0D47A1);
+         padding-top: 13px;
+         padding-bottom: 11px;
+         }</string>
+       </property>
        <property name="text">
-        <string>Построить дом (8 млн)</string>
+        <string>Построить дом
+         (8 млн)</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="buildMarketButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton#buildMarketButton {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #FF9800, stop: 1 #F57C00);
+         border: 2px solid #E65100;
+         border-radius: 10px;
+         color: white;
+         font-weight: bold;
+         font-size: 14px;
+         padding: 12px 16px;
+         min-width: 140px;
+         min-height: 50px;
+         }
+
+         QPushButton#buildMarketButton:hover {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #FFB74D, stop: 1 #FF9800);
+         border: 2px solid #EF6C00;
+         }
+
+         QPushButton#buildMarketButton:pressed {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #F57C00, stop: 1 #E65100);
+         padding-top: 13px;
+         padding-bottom: 11px;
+         }
+        </string>
+       </property>
        <property name="text">
-        <string>Построить магазин (2.5 млн)</string>
+        <string>Построить магазин
+         (2.5 млн)</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="skipTurnButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton#skipTurnButton {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #9C27B0, stop: 1 #7B1FA2);
+         border: 2px solid #4A148C;
+         border-radius: 10px;
+         color: white;
+         font-weight: bold;
+         font-size: 14px;
+         padding: 12px 16px;
+         min-width: 140px;
+         min-height: 50px;
+         }
+
+         QPushButton#skipTurnButton:hover {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #BA68C8, stop: 1 #8E24AA);
+         border: 2px solid #6A1B9A;
+         }
+
+         QPushButton#skipTurnButton:pressed {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #7B1FA2, stop: 1 #4A148C);
+         padding-top: 13px;
+         padding-bottom: 11px;
+         }</string>
+       </property>
        <property name="text">
         <string>Пропустить ход</string>
        </property>
@@ -55,6 +149,33 @@
      </item>
      <item>
       <widget class="QPushButton" name="backButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton#backButton {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #f44336, stop: 1 #D32F2F);
+         border: 2px solid #B71C1C;
+         border-radius: 10px;
+         color: white;
+         font-weight: bold;
+         font-size: 14px;
+         padding: 12px 16px;
+         min-width: 140px;
+         min-height: 50px;
+         }
+
+         QPushButton#backButton:hover {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #EF5350, stop: 1 #E53935);
+         border: 2px solid #C62828;
+         }
+
+         QPushButton#backButton:pressed {
+         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+         stop: 0 #D32F2F, stop: 1 #B71C1C);
+         padding-top: 13px;
+         padding-bottom: 11px;
+         }</string>
+       </property>
        <property name="text">
         <string>В главное меню</string>
        </property>

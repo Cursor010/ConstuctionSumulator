@@ -3,44 +3,38 @@
 
 #include <QWidget>
 #include <QVector>
-#include <QStringList>
-#include "building.h"
+#include "player.h"
+#include "cellwidget.h"
+
+namespace Ui {
+class GameWindow;
+}
 
 class MainWindow;
-class Player;
-class CellWidget;
-class QLabel;
-class QVBoxLayout;
-class QHBoxLayout;
-class QGridLayout;
-class QPushButton;
 
 class GameWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent = nullptr);
+    explicit GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent = nullptr);
     ~GameWindow();
 
-signals:
-    void turnCompleted(); // Сигнал о завершении хода
+protected:
+    void paintEvent(QPaintEvent* event) override;
 
 private slots:
-    void onBuildHouseClicked();
-    void onBuildMarketClicked();
-    void onSkipTurnClicked();
+    void on_buildHouseButton_clicked();
+    void on_buildMarketButton_clicked();
+    void on_skipTurnButton_clicked();
+    void on_backButton_clicked();
     void onCellClicked(int cellIndex);
-    void backToMainMenu();
+
+    // Добавьте этот слот
+    void showMonthlyProfit();
 
 private:
-    void setupUI();
-    void updateGameState();
-    void highlightAvailableCells();
-    void resetCellHighlights();
-    void nextPlayer();
-    void endGame();
-
+    Ui::GameWindow *ui;
     MainWindow* mainWindow;
     QVector<Player*> players;
     QVector<CellWidget*> cells;
@@ -50,8 +44,12 @@ private:
     bool currentPlayerHasBuilt;
     Building::Type buildingTypeToBuild;
 
-    QLabel* infoLabel;
-    QLabel* playersInfoLabel;
+    void setupGame();
+    void updateGameState();
+    void highlightAvailableCells();
+    void resetCellHighlights();
+    void nextPlayer();
+    void endGame();
 };
 
 #endif

@@ -4,16 +4,17 @@ Building::Building(Type t, int owner, int buildTime, int buildingCost, QColor co
     type = t;
     ownerId = owner;
     this->buildTime = buildTime;
-    monthsBuilt = 1; // Начинаем с первого этапа, а не с нулевого
+    monthsBuilt = 1;
     cost = buildingCost;
-    isCompleted = (buildTime == 1); // Если время постройки 1 месяц, здание сразу завершено
+    isCompleted = (buildTime == 1);
     constructionCostPerMonth = cost / buildTime;
-    totalApartments = (t == HOUSE) ? 100 : 0;
-    soldApartments = 0;
+    totalArea = 0.0;
+    soldArea = 0.0;
+    pricePerSqm = 0.0;
+    monthlyProfit = 0.0;
     ownerColor = color;
     this->cellIndex = cellIndex;
 
-    // Если время постройки 1 месяц, здание сразу завершено
     if (buildTime == 1) {
         isCompleted = true;
     }
