@@ -12,7 +12,7 @@ CellWidget::CellWidget(int index, QWidget *parent)
     // Инициализация для отображения прибыли
     profitLabel = new QLabel(this);
     profitLabel->setAlignment(Qt::AlignCenter);
-    profitLabel->setStyleSheet("QLabel { background-color: rgba(255, 255, 255, 200); border: 1px solid gray; font-weight: bold; font-size: 10px; }");
+    profitLabel->setStyleSheet("QLabel { font-weight: bold; font-size: 10px; }"); // Убран фон
     profitLabel->setFixedSize(60, 20);
     profitLabel->hide();
 
@@ -56,9 +56,9 @@ void CellWidget::showProfit(double profit) {
     QString text = QString::number(profit, 'f', 0);
     if (profit > 0) {
         text = "+" + text;
-        profitLabel->setStyleSheet("QLabel { color: green; background-color: rgba(255, 255, 255, 200); border: 1px solid gray; font-weight: bold; font-size: 10px; }");
+        profitLabel->setStyleSheet("QLabel { color: green; font-weight: bold; font-size: 10px; }"); // Убран фон
     } else {
-        profitLabel->setStyleSheet("QLabel { color: red; background-color: rgba(255, 255, 255, 200); border: 1px solid gray; font-weight: bold; font-size: 10px; }");
+        profitLabel->setStyleSheet("QLabel { color: red; font-weight: bold; font-size: 10px; }"); // Убран фон
     }
 
     profitLabel->setText(text);
@@ -77,13 +77,6 @@ void CellWidget::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-
-    // Рисуем фон
-    if (isHighlighted_) {
-        painter.fillRect(rect(), QBrush(highlightColor.lighter(150)));
-    } else {
-        painter.fillRect(rect(), QBrush(Qt::lightGray));
-    }
 
     // Рисуем границу
     painter.setPen(Qt::black);

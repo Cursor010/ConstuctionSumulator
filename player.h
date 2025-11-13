@@ -65,6 +65,11 @@ public:
     // Получение прибыли по зданиям
     QList<QPair<int, double>> getBuildingsMonthlyProfit() const;
 
+    // Методы для работы с прибылью за последний месяц
+    void setLastMonthProfits(const QList<QPair<int, double>>& profits);
+    QList<QPair<int, double>> getLastMonthProfits() const;
+    void clearLastMonthProfits();
+
 private:
     // Константы игры
     static const int INITIAL_MONEY = 37000000;
@@ -96,6 +101,9 @@ private:
     QList<int> currentMarketCells;
     QList<int> previousHouseCells;
     QList<int> previousMarketCells;
+
+    // Прибыль за последний месяц
+    QList<QPair<int, double>> lastMonthProfits;
 
     // Вспомогательные методы
     void processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells);

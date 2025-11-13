@@ -23,10 +23,9 @@ GameWindow::GameWindow(MainWindow* mainWindow, const QStringList& playerNames, i
 
     QVector<QColor> playerColors = {Qt::red, Qt::blue, Qt::green, Qt::yellow, Qt::magenta};
 
-    // Проверяем, что имена правильно передаются
+    // Создаем игроков
     for (int i = 0; i < playerNames.size(); ++i) {
         players.append(new Player(playerNames[i], i, playerColors[i]));
-        qDebug() << "Создан игрок:" << playerNames[i]; // Для отладки
     }
 
     setupGame();
@@ -109,25 +108,6 @@ void GameWindow::updateGameState()
     ui->playersInfoLabel->setText(playersInfo);
 
     for (CellWidget* cell : cells) {
-        cell->update(); // Используем update() вместо updateCell()
-    }
-}
-
-void GameWindow::highlightAvailableCells()
-{
-    for (CellWidget* cell : cells) {
-        if (!cell->getBuilding()) {
-            cell->setHighlighted(true);
-            cell->setHighlightColor(players[currentPlayerIndex]->getColor());
-            cell->update();
-        }
-    }
-}
-
-void GameWindow::resetCellHighlights()
-{
-    for (CellWidget* cell : cells) {
-        cell->setHighlighted(false);
         cell->update();
     }
 }
@@ -156,16 +136,12 @@ void GameWindow::nextPlayer()
     currentPlayerHasBuilt = false;
     buildingTypeToBuild = Building::NO_BUILDING;
     updateGameState();
-    resetCellHighlights();
-
-    // emit turnCompleted(); // Убрал, так как этот сигнал не объявлен
 }
 
-// Добавленная реализация метода showMonthlyProfit
 void GameWindow::showMonthlyProfit()
 {
     Player* currentPlayer = players[currentPlayerIndex];
-    QList<QPair<int, double>> profits = currentPlayer->getBuildingsMonthlyProfit();
+    QList<QPair<int, double>> profits = currentPlayer->getLastMonthProfits();
 
     for (const QPair<int, double>& profit : profits) {
         int cellIndex = profit.first;
@@ -175,6 +151,9 @@ void GameWindow::showMonthlyProfit()
             cells[cellIndex]->showProfit(amount);
         }
     }
+
+    // Очищаем прибыль после показа
+    currentPlayer->clearLastMonthProfits();
 }
 
 void GameWindow::endGame()
@@ -213,8 +192,6 @@ void GameWindow::on_buildHouseButton_clicked()
         return;
     }
 
-    resetCellHighlights();
-    highlightAvailableCells();
     buildingTypeToBuild = Building::HOUSE;
 }
 
@@ -230,8 +207,6 @@ void GameWindow::on_buildMarketButton_clicked()
         return;
     }
 
-    resetCellHighlights();
-    highlightAvailableCells();
     buildingTypeToBuild = Building::MARKET;
 }
 
@@ -257,7 +232,6 @@ void GameWindow::onCellClicked(int cellIndex)
             cells[cellIndex]->setBuilding(newBuilding);
             cells[cellIndex]->update();
 
-            resetCellHighlights();
             currentPlayerHasBuilt = true;
             buildingTypeToBuild = Building::NO_BUILDING;
 

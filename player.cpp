@@ -121,6 +121,15 @@ void Player::processMonthlyOperations(Season season) {
         }
     }
 
+    // Сохраняем прибыль за последний месяц
+    lastMonthProfits.clear();
+    for (Building* building : buildings) {
+        double profit = building->getMonthlyProfit();
+        if (profit != 0) {
+            lastMonthProfits.append(qMakePair(building->getCellIndex(), profit));
+        }
+    }
+
     // Проверка на банкротство
     if (money < 0) {
         isBankrupt = true;
@@ -237,7 +246,7 @@ double Player::calculateTotalCapital() const {
     return capital;
 }
 
-// Геттеры для получения информации о зданиях
+// Геттеры для получения информации о зданиям
 QList<Player::BuildingInfo> Player::getHouseBuildings() const {
     QList<BuildingInfo> houses;
     for (Building* building : buildings) {
@@ -363,4 +372,16 @@ QList<QPair<int, double>> Player::getBuildingsMonthlyProfit() const {
         profits.append(qMakePair(building->getCellIndex(), building->getMonthlyProfit()));
     }
     return profits;
+}
+
+void Player::setLastMonthProfits(const QList<QPair<int, double>>& profits) {
+    lastMonthProfits = profits;
+}
+
+QList<QPair<int, double>> Player::getLastMonthProfits() const {
+    return lastMonthProfits;
+}
+
+void Player::clearLastMonthProfits() {
+    lastMonthProfits.clear();
 }

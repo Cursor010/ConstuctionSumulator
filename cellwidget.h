@@ -24,8 +24,6 @@ public:
     // Метод для отображения прибыли
     void showProfit(double profit);
 
-    // Убрал updateCell(), используем стандартный update()
-
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;

@@ -30,9 +30,6 @@ private slots:
     void on_backButton_clicked();
     void onCellClicked(int cellIndex);
 
-    // Добавьте этот слот
-    void showMonthlyProfit();
-
 private:
     Ui::GameWindow *ui;
     MainWindow* mainWindow;
@@ -46,10 +43,9 @@ private:
 
     void setupGame();
     void updateGameState();
-    void highlightAvailableCells();
-    void resetCellHighlights();
     void nextPlayer();
     void endGame();
+    void showMonthlyProfit(); // Показ прибыли в начале хода
 };
 
 #endif
