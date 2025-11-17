@@ -30,65 +30,62 @@ public:
     Player(QString playerName, int playerId, QColor playerColor);
     ~Player();
 
-    // Основные методы
-    void updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth, const QList<Player*>& allPlayers);
-    void processMonth(const QList<Player*>& allPlayers);
+    // Основные методы согласно требованиям
+    void processMonth(const QList<Player*>& allPlayers, int currentMonth);
+
+    // Методы для строительства
     bool canBuild(Building::Type type);
     Building* build(Building::Type type, int cellIndex);
+
+    // Расчет капитала
     double calculateTotalCapital() const;
 
     // Геттеры
     QString getName() const { return name; }
-    int getMoney() const { return money; }
+    double getMoney() const { return money; }
     QColor getColor() const { return color; }
     int getId() const { return id; }
     bool getIsBankrupt() const { return isBankrupt; }
 
+    void addMoney(double amount) { money += amount; }
+    void subtractMoney(double amount) { money -= amount; }
+
     // Методы для работы со зданиями
-    QList<BuildingInfo> getHouseBuildings() const;
-    QList<BuildingInfo> getMarketBuildings() const;
     QList<BuildingInfo> getAllBuildings() const;
     QList<int> getHouseCells() const;
     QList<int> getMarketCells() const;
-    QList<int> getAllBuildingsCells() const;
     QList<Building*> getBuildings() const { return buildings; }
 
     // Методы для получения прибыли
     QList<QPair<int, double>> getLastMonthProfits() const;
-    void setLastMonthProfits(const QList<QPair<int, double>>& profits);
     void clearLastMonthProfits();
 
-private:
-    void processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells);
-    void processMonthlyOperations(Season season, const QList<Player*>& allPlayers);
-    void processHousingSales(Building* house, double baseDemand, const QList<Player*>& allPlayers);
-    void processMarketRevenue(Building* market, double baseRevenue, const QList<Player*>& allPlayers);
-
-    int countNeighborHouses(int cellIndex, const QList<Player*>& allPlayers) const;
-    int countNeighborMarkets(int cellIndex, const QList<Player*>& allPlayers) const;
-    QList<int> getNeighborCells(int cellIndex) const;
-
+    // Вспомогательные методы
     Season getSeason(int month) const;
     double getHousingDemand(Season season) const;
     double getMarketRevenue(Season season) const;
+
+    // Методы для подсчета соседей (сделаны публичными)
+    int countNeighborHouses(int cellIndex, const QList<Player*>& allPlayers) const;
+    int countNeighborMarkets(int cellIndex, const QList<Player*>& allPlayers) const;
+
+private:
+    // Операции месяца согласно требованиям
+    void payConstructionCosts();                                   // п.1
+    void receiveMarketRevenue(const QList<Player*>& allPlayers, int currentMonth);   // п.3
+    void updateHousingPrices();                                    // п.4
+
+    // Вспомогательные методы
+    QList<int> getNeighborCells(int cellIndex) const;
     bool hasBuildingInCell(int cellIndex) const;
 
     QString name;
-    int money;
+    double money;  // в у.е.
     int id;
     QColor color;
     bool isBankrupt;
 
     QList<Building*> buildings;
-    QList<int> currentHouseCells;
-    QList<int> currentMarketCells;
-    QList<int> previousHouseCells;
-    QList<int> previousMarketCells;
-
-    double totalRevenue;
-    double totalConstructionCost;
-    double totalAdvertisingCost;
-
     QList<QPair<int, double>> lastMonthProfits;
 };
 

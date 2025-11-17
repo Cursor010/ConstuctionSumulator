@@ -23,6 +23,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     player.cpp \
+    realestateagency.cpp \
     setupwindow.cpp
 
 HEADERS += \
@@ -32,6 +33,7 @@ HEADERS += \
     gamewindow.h \
     mainwindow.h \
     player.h \
+    realestateagency.h \
     setupwindow.h
 
 FORMS += \

@@ -8,10 +8,10 @@ class Building
 public:
     enum Type {
         NO_BUILDING,
-        HOUSE_CONCRETE,
-        HOUSE_WOOD,
-        HOUSE_BRICK,
-        MARKET
+        HOUSE_CONCRETE,  // панельный
+        HOUSE_WOOD,      // деревянный
+        HOUSE_BRICK,     // кирпичный
+        MARKET           // супермаркет
     };
 
     Building(Type t, int owner, int buildTime, int buildingCost, QColor color, int cellIndex);
@@ -35,6 +35,7 @@ public:
     void setSoldArea(double area) { soldArea = area; }
     void setPricePerSqm(double price) { pricePerSqm = price; }
     void setMonthlyProfit(double profit) { monthlyProfit = profit; }
+    void addToMonthlyProfit(double profit) { monthlyProfit += profit; }
 
     void progressMonth();
 

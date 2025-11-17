@@ -4,6 +4,7 @@
 #include "player.h"
 #include "cellwidget.h"
 #include "building.h"
+#include "realestateagency.h"
 #include <QMessageBox>
 #include <QTimer>
 #include <QPainter>
@@ -13,7 +14,7 @@ GameWindow::GameWindow(MainWindow* mainWindow, const QStringList& playerNames, i
     : QWidget(parent),
     ui(new Ui::GameWindow),
     mainWindow(mainWindow),
-    totalMonths(GameConfig::TOTAL_MONTHS),
+    totalMonths(totalMonths),
     currentMonth(0),
     currentPlayerIndex(0),
     currentPlayerHasBuilt(false),
@@ -53,7 +54,6 @@ void GameWindow::paintEvent(QPaintEvent* event)
 
 QString GameWindow::getSeasonName(int month) const
 {
-    // 3 месяца на сезон, блять
     int seasonIndex = (month / 3) % 4;
     switch(seasonIndex) {
     case 0: return "Весна";
@@ -97,21 +97,95 @@ void GameWindow::updateGameState()
                                     .arg(playerColor.name())
                                     .arg(currentPlayer->getName());
 
-    ui->infoLabel->setText(QString("Ход: %1 | Месяц: %2/%3 | Сезон: %4 | Деньги: <b>%5 у.е.</b>")
+    // Отображаем деньги в миллионах для удобства
+    double moneyInMillions = currentPlayer->getMoney() / 1000000.0;
+
+    ui->infoLabel->setText(QString("Ход: %1 | Месяц: %2/%3 | Сезон: %4 | Деньги: <b>%5 млн у.е.</b>")
                                .arg(playerNameColored)
                                .arg(currentMonth + 1)
                                .arg(totalMonths)
                                .arg(seasonName)
-                               .arg(currentPlayer->getMoney()));
+                               .arg(moneyInMillions, 0, 'f', 2));
 
+    // Показываем детальную информацию по зданиям текущего игрока
+    QString buildingsInfo = "<h3 style='margin: 5px;'>Мои здания:</h3>";
+    QList<Player::BuildingInfo> allBuildings = currentPlayer->getAllBuildings();
+
+    if (allBuildings.isEmpty()) {
+        buildingsInfo += "<div style='margin: 2px; padding: 3px; font-size: small;'>"
+                         "Нет построенных зданий</div>";
+    } else {
+        for (int i = 0; i < allBuildings.size(); ++i) {
+            const Player::BuildingInfo& building = allBuildings[i];
+            QString buildingName;
+            QString status;
+            QString profitText;
+            QColor profitColor = Qt::black;
+
+            switch (building.type) {
+            case Building::HOUSE_CONCRETE:
+                buildingName = "🏗️ Бетонный дом";
+                break;
+            case Building::HOUSE_WOOD:
+                buildingName = "🌲 Деревянный дом";
+                break;
+            case Building::HOUSE_BRICK:
+                buildingName = "🧱 Кирпичный дом";
+                break;
+            case Building::MARKET:
+                buildingName = "🏪 Магазин";
+                break;
+            default:
+                buildingName = "❓ Неизвестное здание";
+            }
+
+            if (building.isCompleted) {
+                status = "✅ Завершено";
+            } else {
+                status = QString("🔄 Строится (%1/%2)")
+                             .arg(building.buildProgress)
+                             .arg(building.totalBuildTime);
+            }
+
+            // Форматируем прибыль/убыток
+            double profitInThousands = building.monthlyProfit / 1000.0;
+            if (building.monthlyProfit > 0) {
+                profitText = QString("💰 <span style='color: green;'>+%1 тыс.у.е.</span>")
+                                 .arg(profitInThousands, 0, 'f', 1);
+                profitColor = Qt::darkGreen;
+            } else if (building.monthlyProfit < 0) {
+                profitText = QString("💸 <span style='color: red;'>%1 тыс.у.е.</span>")
+                                 .arg(profitInThousands, 0, 'f', 1);
+                profitColor = Qt::red;
+            } else {
+                profitText = "➖ 0 у.е.";
+            }
+
+            buildingsInfo += QString("<div style='margin: 2px; padding: 3px; border: 1px solid %1; font-size: small;'>"
+                                     "<b>%2</b> (клетка %3)<br>"
+                                     "%4 | %5"
+                                     "</div>")
+                                 .arg(profitColor.name())
+                                 .arg(buildingName)
+                                 .arg(building.cellIndex + 1)
+                                 .arg(status)
+                                 .arg(profitText);
+        }
+    }
+
+    // Общая статистика игроков
     QString playersInfo = "<h3 style='margin: 5px;'>Статистика игроков:</h3>";
 
-    for (Player* player : players) {
+    for (int i = 0; i < players.size(); ++i) {
+        Player* player = players[i];
         int completedHouses = 0;
         int completedMarkets = 0;
+        double totalProfit = 0;
 
         QList<Player::BuildingInfo> buildings = player->getAllBuildings();
-        for (const Player::BuildingInfo& building : buildings) {
+        for (int j = 0; j < buildings.size(); ++j) {
+            const Player::BuildingInfo& building = buildings[j];
+            totalProfit += building.monthlyProfit;
             if (building.isCompleted) {
                 if (building.type == Building::HOUSE_CONCRETE ||
                     building.type == Building::HOUSE_WOOD ||
@@ -123,36 +197,59 @@ void GameWindow::updateGameState()
             }
         }
 
+        QString profitText;
+        if (totalProfit > 0) {
+            profitText = QString("📈 <span style='color: green;'>+%1</span>")
+                             .arg(totalProfit / 1000.0, 0, 'f', 1);
+        } else if (totalProfit < 0) {
+            profitText = QString("📉 <span style='color: red;'>%1</span>")
+                             .arg(totalProfit / 1000.0, 0, 'f', 1);
+        } else {
+            profitText = "➖ 0";
+        }
+
         playersInfo += QString("<div style='margin: 2px; padding: 3px; border: 1px solid %1; font-size: small;'>"
                                "<b>%2</b> | "
-                               "💰<b>%3</b> | "
+                               "💰<b>%3 млн</b> | "
                                "🏠<b>%4</b> | "
-                               "🏪<b>%5</b>"
+                               "🏪<b>%5</b> | "
+                               "Прибыль: %6 тыс."
                                "</div>")
                            .arg(player->getColor().name())
                            .arg(player->getName())
-                           .arg(player->getMoney())
+                           .arg(player->getMoney() / 1000000.0, 0, 'f', 2)
                            .arg(completedHouses)
-                           .arg(completedMarkets);
+                           .arg(completedMarkets)
+                           .arg(profitText);
     }
 
-    ui->playersInfoLabel->setText(playersInfo);
+    // Объединяем информацию о зданиях и статистику игроков
+    QString allInfo = buildingsInfo + playersInfo;
+    ui->playersInfoLabel->setText(allInfo);
 
-    for (CellWidget* cell : cells) {
-        cell->update();
+    for (int i = 0; i < cells.size(); ++i) {
+        cells[i]->update();
     }
 }
 
 void GameWindow::nextPlayer()
 {
+    // Показываем прибыль за прошлый месяц
     showMonthlyProfit();
 
     currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
 
     if (currentPlayerIndex == 0) {
         currentMonth++;
-        for (Player* player : players) {
-            player->processMonth(players); // передаем список всех игроков
+
+        // Обрабатываем продажи жилья через риэлторское агентство
+        Player::Season currentSeason = players[0]->getSeason(currentMonth);
+        double totalDemand = players[0]->getHousingDemand(currentSeason);
+        RealEstateAgency::processHousingSales(totalDemand, players);
+
+        // Обработка месяца для всех игроков
+        for (int i = 0; i < players.size(); ++i) {
+            players[i]->processMonth(players, currentMonth);
         }
 
         if (currentMonth >= totalMonths) {
@@ -171,11 +268,26 @@ void GameWindow::showMonthlyProfit()
     Player* currentPlayer = players[currentPlayerIndex];
     QList<QPair<int, double>> profits = currentPlayer->getLastMonthProfits();
 
-    for (const QPair<int, double>& profit : profits) {
+    // Показываем всплывающие сообщения о прибыли/убытках
+    QStringList profitMessages;
+
+    for (int i = 0; i < profits.size(); ++i) {
+        const QPair<int, double>& profit = profits[i];
         int cellIndex = profit.first;
         double amount = profit.second;
+
         if (amount != 0) {
             cells[cellIndex]->showProfit(amount);
+
+            // Формируем сообщение
+            QString profitType = amount > 0 ? "прибыль" : "убыток";
+            QString sign = amount > 0 ? "+" : "";
+            double amountInThousands = amount / 1000.0;
+
+            profitMessages.append(QString("Клетка %1: %2%3 тыс.у.е.")
+                                      .arg(cellIndex + 1)
+                                      .arg(sign)
+                                      .arg(amountInThousands, 0, 'f', 1));
         }
     }
 
@@ -185,22 +297,24 @@ void GameWindow::showMonthlyProfit()
 void GameWindow::endGame()
 {
     Player* winner = players[0];
-    for (Player* player : players) {
-        if (player->calculateTotalCapital() > winner->calculateTotalCapital()) {
-            winner = player;
+    for (int i = 1; i < players.size(); ++i) {
+        if (players[i]->calculateTotalCapital() > winner->calculateTotalCapital()) {
+            winner = players[i];
         }
     }
 
     QString results = "Игра окончена!\n\nРезультаты:\n";
-    for (Player* player : players) {
-        results += QString("%1: %2 у.е.\n")
-                       .arg(player->getName())
-                       .arg(player->calculateTotalCapital());
+    for (int i = 0; i < players.size(); ++i) {
+        double capitalInMillions = players[i]->calculateTotalCapital() / 1000000.0;
+        results += QString("%1: %2 млн у.е.\n")
+                       .arg(players[i]->getName())
+                       .arg(capitalInMillions, 0, 'f', 2);
     }
 
-    results += QString("\nПобедитель: %1 с капиталом %2 у.е.!")
+    double winnerCapitalInMillions = winner->calculateTotalCapital() / 1000000.0;
+    results += QString("\nПобедитель: %1 с капиталом %2 млн у.е.!")
                    .arg(winner->getName())
-                   .arg(winner->calculateTotalCapital());
+                   .arg(winnerCapitalInMillions, 0, 'f', 2);
 
     QMessageBox::information(this, "Конец игры", results);
     on_backButton_clicked();
@@ -219,6 +333,7 @@ void GameWindow::on_buildConcreteHouseButton_clicked()
     }
 
     buildingTypeToBuild = Building::HOUSE_CONCRETE;
+    ui->infoLabel->setText("Выберите клетку для постройки бетонного дома");
 }
 
 void GameWindow::on_buildWoodHouseButton_clicked()
@@ -234,6 +349,7 @@ void GameWindow::on_buildWoodHouseButton_clicked()
     }
 
     buildingTypeToBuild = Building::HOUSE_WOOD;
+    ui->infoLabel->setText("Выберите клетку для постройки деревянного дома");
 }
 
 void GameWindow::on_buildBrickHouseButton_clicked()
@@ -249,6 +365,7 @@ void GameWindow::on_buildBrickHouseButton_clicked()
     }
 
     buildingTypeToBuild = Building::HOUSE_BRICK;
+    ui->infoLabel->setText("Выберите клетку для постройки кирпичного дома");
 }
 
 void GameWindow::on_buildMarketButton_clicked()
@@ -264,6 +381,7 @@ void GameWindow::on_buildMarketButton_clicked()
     }
 
     buildingTypeToBuild = Building::MARKET;
+    ui->infoLabel->setText("Выберите клетку для постройки магазина");
 }
 
 void GameWindow::on_skipTurnButton_clicked()
@@ -299,19 +417,19 @@ void GameWindow::onCellClicked(int cellIndex)
             switch (newBuilding->getType()) {
             case Building::HOUSE_CONCRETE:
                 buildingName = "бетонный дом";
-                totalStages = 6;
+                totalStages = GameConfig::CONCRETE_HOUSE_BUILD_TIME;
                 break;
             case Building::HOUSE_WOOD:
                 buildingName = "деревянный дом";
-                totalStages = 6;
+                totalStages = GameConfig::WOOD_HOUSE_BUILD_TIME;
                 break;
             case Building::HOUSE_BRICK:
                 buildingName = "кирпичный дом";
-                totalStages = 6;
+                totalStages = GameConfig::BRICK_HOUSE_BUILD_TIME;
                 break;
             case Building::MARKET:
                 buildingName = "магазин";
-                totalStages = 5;
+                totalStages = GameConfig::MARKET_BUILD_TIME;
                 break;
             default:
                 buildingName = "здание";
@@ -320,15 +438,18 @@ void GameWindow::onCellClicked(int cellIndex)
 
             QMessageBox* msgBox = new QMessageBox(this);
             msgBox->setWindowTitle("Успех");
-            msgBox->setText(QString("Начато строительство %1!\nЭтап: 1/%2\nХод переходит следующему игроку.")
+            msgBox->setText(QString("Начато строительство %1!\nЭтап: 1/%2\nСтоимость: %3 млн у.е.\nХод переходит следующему игроку.")
                                 .arg(buildingName)
-                                .arg(totalStages));
+                                .arg(totalStages)
+                                .arg(newBuilding->getCost() / 1000000.0, 0, 'f', 2));
             msgBox->setAttribute(Qt::WA_DeleteOnClose);
 
-            QTimer::singleShot(1500, msgBox, &QMessageBox::accept);
-            QTimer::singleShot(1500, this, &GameWindow::nextPlayer);
+            QTimer::singleShot(2000, msgBox, &QMessageBox::accept);
+            QTimer::singleShot(2000, this, &GameWindow::nextPlayer);
 
             msgBox->exec();
         }
+    } else if (buildingTypeToBuild != Building::NO_BUILDING) {
+        QMessageBox::warning(this, "Ошибка", "В этой клетке уже есть здание!");
     }
 }
