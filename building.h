@@ -4,20 +4,28 @@
 #include <QColor>
 
 // Константы строительства
-const int HOUSE_COST = 8000000;
+const int HOUSE_CONCRETE_COST = 8000000;
+const int HOUSE_WOOD_COST = 8000000;
+const int HOUSE_BRICK_COST = 8000000;
 const int MARKET_COST = 2500000;
 const int HOUSE_BUILD_TIME = 6;
 const int MARKET_BUILD_TIME = 5;
 const int INITIAL_MONEY = 37000000;
 
 // Константы для расчета доходов
-const int BASE_HOUSE_DEMAND = 1000; // базовый спрос на жилье в кв.м.
-const int BASE_MARKET_REVENUE = 500000; // базовый доход магазина
-const double BASE_HOUSE_PRICE = 10000.0; // базовая цена за кв.м.
+const int BASE_HOUSE_DEMAND = 1000;
+const int BASE_MARKET_REVENUE = 500000;
+const double BASE_HOUSE_PRICE = 10000.0;
 
 class Building {
 public:
-    enum Type { HOUSE, MARKET, NO_BUILDING };
+    enum Type {
+        NO_BUILDING,
+        HOUSE_CONCRETE,
+        HOUSE_WOOD,
+        HOUSE_BRICK,
+        MARKET
+    };
 
     Building(Type t, int owner, int buildTime, int buildingCost, QColor color, int cellIndex);
 
@@ -50,11 +58,10 @@ private:
     int monthsBuilt;
     int cost;
     bool isCompleted;
-    double constructionCostPerMonth;
     double totalArea;
     double soldArea;
     double pricePerSqm;
-    double monthlyProfit; // Прибыль за месяц
+    double monthlyProfit;
     QColor ownerColor;
     int cellIndex;
 };

@@ -6,6 +6,8 @@
 #include <QTimer>
 #include "building.h"
 
+class Building;
+
 class CellWidget : public QWidget
 {
     Q_OBJECT
@@ -16,13 +18,11 @@ public:
 
     Building* getBuilding() const;
     void setBuilding(Building* newBuilding);
-    bool isHighlighted() const;
-    void setHighlighted(bool highlighted);
-    QColor getHighlightColor() const;
-    void setHighlightColor(const QColor& color);
 
-    // Метод для отображения прибыли
     void showProfit(double profit);
+
+signals:
+    void cellClicked(int cellIndex);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -31,18 +31,12 @@ protected:
 private slots:
     void hideProfit();
 
-signals:
-    void cellClicked(int index);
-
 private:
     int cellIndex;
     Building* building;
-    bool isHighlighted_;
-    QColor highlightColor;
 
-    // Для отображения прибыли
     QLabel* profitLabel;
     QTimer* profitTimer;
 };
 
-#endif
+#endif // CELLWIDGET_H

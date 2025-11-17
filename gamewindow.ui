@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>700</height>
+    <width>1200</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,183 +19,316 @@
     }
    </string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="mainHorizontalLayout">
    <item>
-    <widget class="QLabel" name="infoLabel">
-     <property name="font">
-      <font>
-       <pointsize>14</pointsize>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Ход: | Месяц: 0/0 | Деньги: 0 у.е.</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <layout class="QGridLayout" name="gridLayout">
-     <property name="sizeConstraint">
-      <enum>QLayout::SetFixedSize</enum>
-     </property>
+    <layout class="QVBoxLayout" name="leftVerticalLayout">
+     <item>
+      <widget class="QLabel" name="infoLabel">
+       <property name="font">
+        <font>
+         <pointsize>14</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Ход: | Месяц: 0/0 | Деньги: 0 у.е.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeft</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <property name="sizeConstraint">
+        <enum>QLayout::SetFixedSize</enum>
+       </property>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="buttonsHorizontalLayout">
+       <item>
+        <widget class="QPushButton" name="buildConcreteHouseButton">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #2196F3, stop: 1 #1976D2);
+    border: 2px solid #0D47A1;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 12px;
+    }
+
+    QPushButton:hover {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #42A5F5, stop: 1 #1E88E5);
+    border: 2px solid #1565C0;
+    }
+
+    QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #1976D2, stop: 1 #0D47A1);
+    padding-top: 9px;
+    padding-bottom: 7px;
+    }</string>
+         </property>
+         <property name="text">
+          <string>Бетонный дом</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buildWoodHouseButton">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #4CAF50, stop: 1 #388E3C);
+    border: 2px solid #1B5E20;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 12px;
+    }
+
+    QPushButton:hover {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #66BB6A, stop: 1 #43A047);
+    border: 2px solid #2E7D32;
+    }
+
+    QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #388E3C, stop: 1 #1B5E20);
+    padding-top: 9px;
+    padding-bottom: 7px;
+    }</string>
+         </property>
+         <property name="text">
+          <string>Деревянный дом</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buildBrickHouseButton">
+         <property name="minimumSize">
+          <size>
+           <width>100</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #FF5722, stop: 1 #D84315);
+    border: 2px solid #BF360C;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 12px;
+    }
+
+    QPushButton:hover {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #FF8A65, stop: 1 #FF7043);
+    border: 2px solid #E64A19;
+    }
+
+    QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #D84315, stop: 1 #BF360C);
+    padding-top: 9px;
+    padding-bottom: 7px;
+    }</string>
+         </property>
+         <property name="text">
+          <string>Кирпичный дом</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buildMarketButton">
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #FF9800, stop: 1 #F57C00);
+    border: 2px solid #E65100;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 12px;
+    }
+
+    QPushButton:hover {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #FFB74D, stop: 1 #FF9800);
+    border: 2px solid #EF6C00;
+    }
+
+    QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #F57C00, stop: 1 #E65100);
+    padding-top: 9px;
+    padding-bottom: 7px;
+    }</string>
+         </property>
+         <property name="text">
+          <string>Магазин</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="skipTurnButton">
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #9C27B0, stop: 1 #7B1FA2);
+    border: 2px solid #4A148C;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 12px;
+    }
+
+    QPushButton:hover {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #BA68C8, stop: 1 #8E24AA);
+    border: 2px solid #6A1B9A;
+    }
+
+    QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #7B1FA2, stop: 1 #4A148C);
+    padding-top: 9px;
+    padding-bottom: 7px;
+    }</string>
+         </property>
+         <property name="text">
+          <string>Пропустить ход</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="backButton">
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>50</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #f44336, stop: 1 #D32F2F);
+    border: 2px solid #B71C1C;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 8px 12px;
+    }
+
+    QPushButton:hover {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #EF5350, stop: 1 #E53935);
+    border: 2px solid #C62828;
+    }
+
+    QPushButton:pressed {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+    stop: 0 #D32F2F, stop: 1 #B71C1C);
+    padding-top: 9px;
+    padding-bottom: 7px;
+    }</string>
+         </property>
+         <property name="text">
+          <string>В главное меню</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="buttonsLayout">
-     <item>
-      <widget class="QPushButton" name="buildHouseButton">
-       <property name="styleSheet">
-        <string notr="true">QPushButton#buildHouseButton {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #2196F3, stop: 1 #1976D2);
-         border: 2px solid #0D47A1;
-         border-radius: 10px;
-         color: white;
-         font-weight: bold;
-         font-size: 14px;
-         padding: 12px 16px;
-         min-width: 140px;
-         min-height: 50px;
-         }
-
-         QPushButton#buildHouseButton:hover {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #42A5F5, stop: 1 #1E88E5);
-         border: 2px solid #1565C0;
-         }
-
-         QPushButton#buildHouseButton:pressed {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #1976D2, stop: 1 #0D47A1);
-         padding-top: 13px;
-         padding-bottom: 11px;
-         }</string>
-       </property>
-       <property name="text">
-        <string>Построить дом
-         (8 млн)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buildMarketButton">
-       <property name="styleSheet">
-        <string notr="true">QPushButton#buildMarketButton {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #FF9800, stop: 1 #F57C00);
-         border: 2px solid #E65100;
-         border-radius: 10px;
-         color: white;
-         font-weight: bold;
-         font-size: 14px;
-         padding: 12px 16px;
-         min-width: 140px;
-         min-height: 50px;
-         }
-
-         QPushButton#buildMarketButton:hover {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #FFB74D, stop: 1 #FF9800);
-         border: 2px solid #EF6C00;
-         }
-
-         QPushButton#buildMarketButton:pressed {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #F57C00, stop: 1 #E65100);
-         padding-top: 13px;
-         padding-bottom: 11px;
-         }
-        </string>
-       </property>
-       <property name="text">
-        <string>Построить магазин
-         (2.5 млн)</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="skipTurnButton">
-       <property name="styleSheet">
-        <string notr="true">QPushButton#skipTurnButton {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #9C27B0, stop: 1 #7B1FA2);
-         border: 2px solid #4A148C;
-         border-radius: 10px;
-         color: white;
-         font-weight: bold;
-         font-size: 14px;
-         padding: 12px 16px;
-         min-width: 140px;
-         min-height: 50px;
-         }
-
-         QPushButton#skipTurnButton:hover {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #BA68C8, stop: 1 #8E24AA);
-         border: 2px solid #6A1B9A;
-         }
-
-         QPushButton#skipTurnButton:pressed {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #7B1FA2, stop: 1 #4A148C);
-         padding-top: 13px;
-         padding-bottom: 11px;
-         }</string>
-       </property>
-       <property name="text">
-        <string>Пропустить ход</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="backButton">
-       <property name="styleSheet">
-        <string notr="true">QPushButton#backButton {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #f44336, stop: 1 #D32F2F);
-         border: 2px solid #B71C1C;
-         border-radius: 10px;
-         color: white;
-         font-weight: bold;
-         font-size: 14px;
-         padding: 12px 16px;
-         min-width: 140px;
-         min-height: 50px;
-         }
-
-         QPushButton#backButton:hover {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #EF5350, stop: 1 #E53935);
-         border: 2px solid #C62828;
-         }
-
-         QPushButton#backButton:pressed {
-         background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-         stop: 0 #D32F2F, stop: 1 #B71C1C);
-         padding-top: 13px;
-         padding-bottom: 11px;
-         }</string>
-       </property>
-       <property name="text">
-        <string>В главное меню</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QLabel" name="playersInfoLabel">
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-      </font>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="minimumSize">
+      <size>
+       <width>350</width>
+       <height>600</height>
+      </size>
      </property>
-     <property name="text">
-      <string>Состояние игроков:</string>
+     <property name="maximumSize">
+      <size>
+       <width>400</width>
+       <height>16777215</height>
+      </size>
      </property>
-     <property name="wordWrap">
+     <property name="widgetResizable">
       <bool>true</bool>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignTop</set>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>348</width>
+        <height>598</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="playersInfoLabel">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Состояние игроков:</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

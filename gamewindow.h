@@ -3,14 +3,15 @@
 
 #include <QWidget>
 #include <QVector>
-#include "player.h"
-#include "cellwidget.h"
+#include "building.h"
+
+class MainWindow;
+class Player;
+class CellWidget;
 
 namespace Ui {
 class GameWindow;
 }
-
-class MainWindow;
 
 class GameWindow : public QWidget
 {
@@ -24,14 +25,22 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private slots:
-    void on_buildHouseButton_clicked();
+    void on_buildConcreteHouseButton_clicked();
+    void on_buildWoodHouseButton_clicked();
+    void on_buildBrickHouseButton_clicked();
     void on_buildMarketButton_clicked();
     void on_skipTurnButton_clicked();
     void on_backButton_clicked();
     void onCellClicked(int cellIndex);
 
 private:
-    Ui::GameWindow *ui;
+    void setupGame();
+    void updateGameState();
+    void nextPlayer();
+    void showMonthlyProfit();
+    void endGame();
+
+    Ui::GameWindow* ui;
     MainWindow* mainWindow;
     QVector<Player*> players;
     QVector<CellWidget*> cells;
@@ -40,12 +49,6 @@ private:
     int currentPlayerIndex;
     bool currentPlayerHasBuilt;
     Building::Type buildingTypeToBuild;
-
-    void setupGame();
-    void updateGameState();
-    void nextPlayer();
-    void endGame();
-    void showMonthlyProfit(); // Показ прибыли в начале хода
 };
 
-#endif
+#endif // GAMEWINDOW_H

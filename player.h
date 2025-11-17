@@ -3,117 +3,96 @@
 
 #include <QString>
 #include <QColor>
-#include <QVector>
 #include <QList>
+#include <QPair>
 #include "building.h"
-
-// Перечисление сезонов
-enum Season {
-    SPRING,
-    SUMMER,
-    AUTUMN,
-    WINTER
-};
 
 class Player {
 public:
-    // Структура для хранения информации о здании
     struct BuildingInfo {
         int cellIndex;
         int buildProgress;
         int totalBuildTime;
         bool isCompleted;
         Building::Type type;
-        double monthlyProfit; // Прибыль за месяц
+        double monthlyProfit;
     };
 
     Player(QString playerName, int playerId, QColor playerColor);
     ~Player();
 
+    // Статические константы
+    static const int INITIAL_MONEY = 37000000;
+    static const int HOUSE_COST = 8000000;
+    static const int MARKET_COST = 2500000;
+    static const int HOUSE_BUILD_TIME = 6;
+    static const int MARKET_BUILD_TIME = 5;
+    static const double BASE_HOUSE_PRICE;
+
     // Геттеры
     QString getName() const { return name; }
-    int getMoney() const { return money; }
-    QColor getColor() const { return color; }
+    double getMoney() const { return money; }
     int getId() const { return id; }
-    QVector<Building*> getBuildings() const { return buildings; }
+    QColor getColor() const { return color; }
     bool getIsBankrupt() const { return isBankrupt; }
-    double getTotalRevenue() const { return totalRevenue; }
-    double getTotalConstructionCost() const { return totalConstructionCost; }
-    double getTotalAdvertisingCost() const { return totalAdvertisingCost; }
 
-    // Основной метод обновления состояния
-    void updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth);
+    // Методы для зданий
+    bool canBuild(Building::Type type);
+    Building* build(Building::Type type, int cellIndex);
 
-    // Методы для получения информации о зданиях
     QList<BuildingInfo> getHouseBuildings() const;
     QList<BuildingInfo> getMarketBuildings() const;
     QList<BuildingInfo> getAllBuildings() const;
+
     QList<int> getHouseCells() const;
     QList<int> getMarketCells() const;
     QList<int> getAllBuildingsCells() const;
 
-    // Методы строительства
-    bool canBuild(Building::Type type);
-    Building* build(Building::Type type, int cellIndex);
-
-    // Метод обработки месяца (для обратной совместимости)
+    // Финансовые методы
     void processMonth();
-
-    // Расчет общего капитала
     double calculateTotalCapital() const;
 
-    // Получение прибыли по зданиям
+    // Прибыль
+    QList<QPair<int, double>> getLastMonthProfits() const;
+    void setLastMonthProfits(const QList<QPair<int, double>>& profits);
+    void clearLastMonthProfits();
     QList<QPair<int, double>> getBuildingsMonthlyProfit() const;
 
-    // Методы для работы с прибылью за последний месяц
-    void setLastMonthProfits(const QList<QPair<int, double>>& profits);
-    QList<QPair<int, double>> getLastMonthProfits() const;
-    void clearLastMonthProfits();
-
 private:
-    // Константы игры
-    static const int INITIAL_MONEY = 37000000;
-    static const int HOUSE_BUILD_TIME = 6;
-    static const int HOUSE_COST = 8000000;
-    static const int MARKET_BUILD_TIME = 5;
-    static const int MARKET_COST = 2500000;
-    static const double BASE_HOUSE_PRICE;
-    static const int BASE_HOUSE_DEMAND = 1000;
-    static const int BASE_MARKET_REVENUE = 500000;
+    enum class Season { SPRING, SUMMER, AUTUMN, WINTER };
 
-    // Основные поля
+    void updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth);
+    void processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells);
+    void processMonthlyOperations(Season season);
+    void processHousingSales(Building* house, double baseDemand);
+    void processMarketRevenue(Building* market, double baseRevenue);
+
+    Season getSeason(int month) const;
+    double getHousingDemand(Season season) const;
+    double getMarketRevenue(Season season) const;
+    bool hasBuildingInCell(int cellIndex) const;
+
     QString name;
-    int money;
+    double money;
     int id;
     QColor color;
     bool isBankrupt;
 
-    // Статистика
-    double totalRevenue;
-    double totalConstructionCost;
-    double totalAdvertisingCost;
-
-    // Списки зданий
-    QVector<Building*> buildings;
-
-    // Текущие и предыдущие позиции зданий
+    QList<Building*> buildings;
     QList<int> currentHouseCells;
     QList<int> currentMarketCells;
     QList<int> previousHouseCells;
     QList<int> previousMarketCells;
 
-    // Прибыль за последний месяц
+    double totalRevenue;
+    double totalConstructionCost;
+    double totalAdvertisingCost;
+
     QList<QPair<int, double>> lastMonthProfits;
 
-    // Вспомогательные методы
-    void processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells);
-    void processMonthlyOperations(Season season);
-    void processHousingSales(Building* house, double baseDemand);
-    void processMarketRevenue(Building* market, double baseRevenue);
-    Season getSeason(int month) const;
-    double getHousingDemand(Season season) const;
-    double getMarketRevenue(Season season) const;
-    bool hasBuildingInCell(int cellIndex) const;
+    // Константы для расчета доходов
+    static const int BASE_HOUSE_DEMAND = 1000;
+    static const int BASE_MARKET_REVENUE = 500000;
 };
 
-#endif
+#endif // PLAYER_H

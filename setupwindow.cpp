@@ -1,17 +1,17 @@
 #include "setupwindow.h"
-#include "mainwindow.h"
 #include "ui_setupwindow.h"
+#include "gamewindow.h"
 #include <QMessageBox>
-#include <QLabel>
-#include <QLineEdit>
-#include <QHBoxLayout>
+#include <QCloseEvent>
 
-SetupWindow::SetupWindow(MainWindow* mainWindow, QWidget *parent)
+SetupWindow::SetupWindow(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::SetupWindow)
-    , mainWindow(mainWindow)
 {
     ui->setupUi(this);
+
+    // Устанавливаем фиксированный размер окна настройки
+    this->setFixedSize(500, 400);
 
     // Устанавливаем начальные значения
     ui->playerCountSpin->setValue(2);
@@ -31,6 +31,7 @@ SetupWindow::SetupWindow(MainWindow* mainWindow, QWidget *parent)
     connect(ui->playerCountSpin, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &SetupWindow::on_playerCountSpin_valueChanged);
     connect(ui->startButton, &QPushButton::clicked, this, &SetupWindow::on_startButton_clicked);
+    //connect(ui->backButton, &QPushButton::clicked, this, &SetupWindow::on_backButton_clicked);
 
     // Подключаем сигналы изменения текста для сохранения имен
     connect(ui->player1Edit, &QLineEdit::textChanged, this, &SetupWindow::saveCurrentNames);
@@ -47,6 +48,8 @@ SetupWindow::~SetupWindow()
 {
     delete ui;
 }
+
+
 
 void SetupWindow::on_playerCountSpin_valueChanged(int value)
 {
@@ -109,6 +112,16 @@ void SetupWindow::on_startButton_clicked()
 
     int totalMonths = ui->monthsSpin->value();
 
-    // Используем сохраненные имена
-    emit startGameSignal(savedNames, totalMonths);
+    // Создаем и показываем игровое окно
+    GameWindow *gameWindow = new GameWindow(nullptr, savedNames, totalMonths);
+    gameWindow->show();
+
+    // Закрываем окно настройки
+    this->close();
+}
+
+void SetupWindow::on_backButton_clicked()
+{
+    // Просто закрываем окно настройки
+    this->close();
 }

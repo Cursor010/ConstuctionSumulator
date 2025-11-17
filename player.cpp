@@ -24,16 +24,9 @@ Player::~Player() {
 }
 
 void Player::updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth) {
-    // Определяем сезон для расчета модификаторов
     Season currentSeason = getSeason(currentMonth);
-
-    // Обрабатываем строительство новых зданий
     processConstruction(newHouseCells, newMarketCells);
-
-    // Обрабатываем ежемесячные операции
     processMonthlyOperations(currentSeason);
-
-    // Сохраняем текущее состояние для следующего месяца
     previousHouseCells = currentHouseCells;
     previousMarketCells = currentMarketCells;
     currentHouseCells = newHouseCells;
@@ -43,22 +36,18 @@ void Player::updateState(const QList<int>& newHouseCells, const QList<int>& newM
 void Player::processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells) {
     if (isBankrupt) return;
 
-    // Находим новые дома (которые есть в новых данных, но не было в предыдущих)
     for (int cell : newHouseCells) {
         if (!previousHouseCells.contains(cell) && !hasBuildingInCell(cell)) {
-            // Создаем новый дом
-            Building* newHouse = new Building(Building::HOUSE, id, HOUSE_BUILD_TIME, HOUSE_COST, color, cell);
-            newHouse->setTotalArea(5000.0); // примерная площадь
+            Building* newHouse = new Building(Building::HOUSE_CONCRETE, id, HOUSE_BUILD_TIME, HOUSE_COST, color, cell);
+            newHouse->setTotalArea(5000.0);
             newHouse->setPricePerSqm(BASE_HOUSE_PRICE);
             buildings.append(newHouse);
             std::cout << "Player " << id << " started building house in cell " << cell << std::endl;
         }
     }
 
-    // Находим новые магазины
     for (int cell : newMarketCells) {
         if (!previousMarketCells.contains(cell) && !hasBuildingInCell(cell)) {
-            // Создаем новый магазин
             Building* newMarket = new Building(Building::MARKET, id, MARKET_BUILD_TIME, MARKET_COST, color, cell);
             buildings.append(newMarket);
             std::cout << "Player " << id << " started building market in cell " << cell << std::endl;
@@ -69,7 +58,6 @@ void Player::processConstruction(const QList<int>& newHouseCells, const QList<in
 void Player::processMonthlyOperations(Season season) {
     if (isBankrupt) return;
 
-    // Сбрасываем прибыль для всех зданий
     for (Building* building : buildings) {
         building->setMonthlyProfit(0.0);
     }
@@ -82,15 +70,13 @@ void Player::processMonthlyOperations(Season season) {
                 money -= monthlyCost;
                 building->progressMonth();
                 totalConstructionCost += monthlyCost;
-                // Устанавливаем отрицательную прибыль для строящихся зданий
                 building->setMonthlyProfit(-monthlyCost);
 
                 if (building->getIsCompleted()) {
                     std::cout << "Player " << id << " completed building in cell " << building->getCellIndex() << std::endl;
                 }
             } else {
-                // Не хватает денег - строительство замедляется
-                building->setMonthlyProfit(0); // Прибыль 0, так как строительство не прогрессирует
+                building->setMonthlyProfit(0);
                 std::cout << "Player " << id << " cannot pay construction cost for cell " << building->getCellIndex() << std::endl;
             }
         }
@@ -99,7 +85,10 @@ void Player::processMonthlyOperations(Season season) {
     // 2. Получение дохода от продажи жилья
     double housingDemand = getHousingDemand(season);
     for (Building* building : buildings) {
-        if (building->getType() == Building::HOUSE && building->getIsCompleted()) {
+        if ((building->getType() == Building::HOUSE_CONCRETE ||
+             building->getType() == Building::HOUSE_WOOD ||
+             building->getType() == Building::HOUSE_BRICK) &&
+            building->getIsCompleted()) {
             processHousingSales(building, housingDemand);
         }
     }
@@ -114,14 +103,16 @@ void Player::processMonthlyOperations(Season season) {
 
     // 4. Автоматическое увеличение цены в ходе строительства
     for (Building* building : buildings) {
-        if (!building->getIsCompleted() && building->getType() == Building::HOUSE) {
+        if (!building->getIsCompleted() &&
+            (building->getType() == Building::HOUSE_CONCRETE ||
+             building->getType() == Building::HOUSE_WOOD ||
+             building->getType() == Building::HOUSE_BRICK)) {
             double progress = static_cast<double>(building->getMonthsBuilt()) / building->getBuildTime();
-            double newPrice = BASE_HOUSE_PRICE * (1.0 + progress * 0.4); // Цена растет на 40% к завершению
+            double newPrice = BASE_HOUSE_PRICE * (1.0 + progress * 0.4);
             building->setPricePerSqm(newPrice);
         }
     }
 
-    // Сохраняем прибыль за последний месяц
     lastMonthProfits.clear();
     for (Building* building : buildings) {
         double profit = building->getMonthlyProfit();
@@ -130,7 +121,6 @@ void Player::processMonthlyOperations(Season season) {
         }
     }
 
-    // Проверка на банкротство
     if (money < 0) {
         isBankrupt = true;
         std::cout << "Player " << id << " is BANKRUPT!" << std::endl;
@@ -140,12 +130,8 @@ void Player::processMonthlyOperations(Season season) {
 void Player::processHousingSales(Building* house, double baseDemand) {
     if (house->getTotalArea() > house->getSoldArea()) {
         double availableArea = house->getTotalArea() - house->getSoldArea();
-
-        // Модификаторы спроса (пока без рекламы и конкуренции)
         double demandModifier = 1.0;
         double effectiveDemand = baseDemand * demandModifier;
-
-        // Модификатор цены (чем выше цена, тем меньше спрос)
         double priceModifier = 1.0 - (house->getPricePerSqm() - BASE_HOUSE_PRICE) / BASE_HOUSE_PRICE * 0.1;
 
         double potentialSales = std::min(availableArea, effectiveDemand * priceModifier);
@@ -154,8 +140,6 @@ void Player::processHousingSales(Building* house, double baseDemand) {
         house->setSoldArea(house->getSoldArea() + potentialSales);
         money += revenue;
         totalRevenue += revenue;
-
-        // Устанавливаем положительную прибыль для построенного дома
         house->setMonthlyProfit(revenue);
 
         if (potentialSales > 0) {
@@ -165,20 +149,17 @@ void Player::processHousingSales(Building* house, double baseDemand) {
 }
 
 void Player::processMarketRevenue(Building* market, double baseRevenue) {
-    // Модификаторы дохода (пока без рекламы и влияния домов)
     double revenueModifier = 1.0;
     double revenue = baseRevenue * revenueModifier;
 
     money += revenue;
     totalRevenue += revenue;
-
-    // Устанавливаем положительную прибыль для магазина
     market->setMonthlyProfit(revenue);
 
     std::cout << "Player " << id << " market revenue: " << revenue << std::endl;
 }
 
-Season Player::getSeason(int month) const {
+Player::Season Player::getSeason(int month) const {
     int monthInYear = month % 12;
     if (monthInYear >= 2 && monthInYear <= 4) return Season::SPRING;
     if (monthInYear >= 5 && monthInYear <= 7) return Season::SUMMER;
@@ -227,16 +208,15 @@ double Player::calculateTotalCapital() const {
     for (Building* building : buildings) {
         if (building->getType() == Building::MARKET) {
             if (building->getIsCompleted()) {
-                capital += building->getCost() * 1.6; // На 60% выше стоимости строительства
+                capital += building->getCost() * 1.6;
             } else {
-                // Стоимость незавершенного строительства
                 capital += (building->getCost() * building->getMonthsBuilt()) / building->getBuildTime();
             }
-        } else { // HOUSE
+        } else {
             if (building->getIsCompleted()) {
                 double unsoldArea = building->getTotalArea() - building->getSoldArea();
                 double costPerSqm = building->getCost() / building->getTotalArea();
-                capital += unsoldArea * costPerSqm; // Непроданное жилье по себестоимости
+                capital += unsoldArea * costPerSqm;
             } else {
                 capital += (building->getCost() * building->getMonthsBuilt()) / building->getBuildTime();
             }
@@ -246,11 +226,12 @@ double Player::calculateTotalCapital() const {
     return capital;
 }
 
-// Геттеры для получения информации о зданиям
 QList<Player::BuildingInfo> Player::getHouseBuildings() const {
     QList<BuildingInfo> houses;
     for (Building* building : buildings) {
-        if (building->getType() == Building::HOUSE) {
+        if (building->getType() == Building::HOUSE_CONCRETE ||
+            building->getType() == Building::HOUSE_WOOD ||
+            building->getType() == Building::HOUSE_BRICK) {
             BuildingInfo info;
             info.cellIndex = building->getCellIndex();
             info.buildProgress = building->getMonthsBuilt();
@@ -299,7 +280,9 @@ QList<Player::BuildingInfo> Player::getAllBuildings() const {
 QList<int> Player::getHouseCells() const {
     QList<int> houseCells;
     for (Building* building : buildings) {
-        if (building->getType() == Building::HOUSE) {
+        if (building->getType() == Building::HOUSE_CONCRETE ||
+            building->getType() == Building::HOUSE_WOOD ||
+            building->getType() == Building::HOUSE_BRICK) {
             houseCells.append(building->getCellIndex());
         }
     }
@@ -327,7 +310,12 @@ QList<int> Player::getAllBuildingsCells() const {
 bool Player::canBuild(Building::Type type) {
     if (isBankrupt) return false;
 
-    int cost = (type == Building::HOUSE) ? HOUSE_COST : MARKET_COST;
+    int cost = 0;
+    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
+        cost = HOUSE_COST;
+    } else if (type == Building::MARKET) {
+        cost = MARKET_COST;
+    }
     return money >= cost;
 }
 
@@ -336,12 +324,20 @@ Building* Player::build(Building::Type type, int cellIndex) {
         return nullptr;
     }
 
-    int buildTime = (type == Building::HOUSE) ? HOUSE_BUILD_TIME : MARKET_BUILD_TIME;
-    int cost = (type == Building::HOUSE) ? HOUSE_COST : MARKET_COST;
+    int buildTime = 0;
+    int cost = 0;
+
+    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
+        buildTime = HOUSE_BUILD_TIME;
+        cost = HOUSE_COST;
+    } else if (type == Building::MARKET) {
+        buildTime = MARKET_BUILD_TIME;
+        cost = MARKET_COST;
+    }
 
     Building* newBuilding = new Building(type, id, buildTime, cost, color, cellIndex);
 
-    if (type == Building::HOUSE) {
+    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
         newBuilding->setTotalArea(5000.0);
         newBuilding->setPricePerSqm(BASE_HOUSE_PRICE);
     }
@@ -350,8 +346,7 @@ Building* Player::build(Building::Type type, int cellIndex) {
     money -= cost;
     totalConstructionCost += cost;
 
-    // Обновляем списки клеток
-    if (type == Building::HOUSE) {
+    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
         currentHouseCells.append(cellIndex);
     } else {
         currentMarketCells.append(cellIndex);
@@ -361,8 +356,6 @@ Building* Player::build(Building::Type type, int cellIndex) {
 }
 
 void Player::processMonth() {
-    // Для обратной совместимости - используем текущие данные
-    // В реальном коде вам нужно определить, какой месяц передавать
     updateState(currentHouseCells, currentMarketCells, 0);
 }
 

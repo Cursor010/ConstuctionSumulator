@@ -3,12 +3,11 @@
 
 #include <QMainWindow>
 
+QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
-
-class SetupWindow;
-class GameWindow;
+QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
@@ -21,13 +20,8 @@ public:
 private slots:
     void on_startGameButton_clicked();
     void on_exitButton_clicked();
-    void handleGameStart(const QStringList& playerNames, int totalMonths);
-    void handleBackToMenu();
 
 private:
     Ui::MainWindow *ui;
-    SetupWindow* setupWindow;
-    GameWindow* gameWindow;
 };
-
-#endif
+#endif // MAINWINDOW_H

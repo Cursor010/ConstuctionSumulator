@@ -2,36 +2,33 @@
 #define SETUPWINDOW_H
 
 #include <QWidget>
-#include <QStringList>
 
 namespace Ui {
 class SetupWindow;
 }
-
-class MainWindow;
 
 class SetupWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit SetupWindow(MainWindow* mainWindow, QWidget *parent = nullptr);
+    explicit SetupWindow(QWidget *parent = nullptr);
     ~SetupWindow();
 
 signals:
-    void startGameSignal(const QStringList& playerNames, int totalMonths);
+    void windowClosed();
 
 private slots:
     void on_playerCountSpin_valueChanged(int value);
     void on_startButton_clicked();
-    void saveCurrentNames(); // Добавляем объявление
+    void on_backButton_clicked();
+    void saveCurrentNames();
 
 private:
     void updateNameFields();
 
     Ui::SetupWindow *ui;
-    MainWindow* mainWindow;
     QStringList savedNames;
 };
 
-#endif
+#endif // SETUPWINDOW_H
