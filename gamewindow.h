@@ -39,6 +39,7 @@ private:
     void nextPlayer();
     void showMonthlyProfit();
     void endGame();
+    QString getSeasonName(int month) const;
 
     Ui::GameWindow* ui;
     MainWindow* mainWindow;

@@ -5,6 +5,8 @@
 
 // Инициализация статических констант
 const double Player::BASE_HOUSE_PRICE = 10000.0;
+const double Player::BASE_HOUSE_DEMAND = 1000.0;
+const double Player::BASE_MARKET_REVENUE = 20000.0;
 
 Player::Player(QString playerName, int playerId, QColor playerColor) {
     name = playerName;
@@ -42,7 +44,6 @@ void Player::processConstruction(const QList<int>& newHouseCells, const QList<in
             newHouse->setTotalArea(5000.0);
             newHouse->setPricePerSqm(BASE_HOUSE_PRICE);
             buildings.append(newHouse);
-            std::cout << "Player " << id << " started building house in cell " << cell << std::endl;
         }
     }
 
@@ -50,7 +51,6 @@ void Player::processConstruction(const QList<int>& newHouseCells, const QList<in
         if (!previousMarketCells.contains(cell) && !hasBuildingInCell(cell)) {
             Building* newMarket = new Building(Building::MARKET, id, MARKET_BUILD_TIME, MARKET_COST, color, cell);
             buildings.append(newMarket);
-            std::cout << "Player " << id << " started building market in cell " << cell << std::endl;
         }
     }
 }
@@ -71,13 +71,8 @@ void Player::processMonthlyOperations(Season season) {
                 building->progressMonth();
                 totalConstructionCost += monthlyCost;
                 building->setMonthlyProfit(-monthlyCost);
-
-                if (building->getIsCompleted()) {
-                    std::cout << "Player " << id << " completed building in cell " << building->getCellIndex() << std::endl;
-                }
             } else {
                 building->setMonthlyProfit(0);
-                std::cout << "Player " << id << " cannot pay construction cost for cell " << building->getCellIndex() << std::endl;
             }
         }
     }
@@ -123,7 +118,6 @@ void Player::processMonthlyOperations(Season season) {
 
     if (money < 0) {
         isBankrupt = true;
-        std::cout << "Player " << id << " is BANKRUPT!" << std::endl;
     }
 }
 
@@ -141,10 +135,6 @@ void Player::processHousingSales(Building* house, double baseDemand) {
         money += revenue;
         totalRevenue += revenue;
         house->setMonthlyProfit(revenue);
-
-        if (potentialSales > 0) {
-            std::cout << "Player " << id << " sold " << potentialSales << " sqm for " << revenue << std::endl;
-        }
     }
 }
 
@@ -155,16 +145,18 @@ void Player::processMarketRevenue(Building* market, double baseRevenue) {
     money += revenue;
     totalRevenue += revenue;
     market->setMonthlyProfit(revenue);
-
-    std::cout << "Player " << id << " market revenue: " << revenue << std::endl;
 }
 
 Player::Season Player::getSeason(int month) const {
-    int monthInYear = month % 12;
-    if (monthInYear >= 2 && monthInYear <= 4) return Season::SPRING;
-    if (monthInYear >= 5 && monthInYear <= 7) return Season::SUMMER;
-    if (monthInYear >= 8 && monthInYear <= 10) return Season::AUTUMN;
-    return Season::WINTER;
+    // 3 месяца на сезон, блять
+    int seasonIndex = (month / 3) % 4;
+    switch(seasonIndex) {
+    case 0: return Season::SPRING;
+    case 1: return Season::SUMMER;
+    case 2: return Season::AUTUMN;
+    case 3: return Season::WINTER;
+    default: return Season::SPRING;
+    }
 }
 
 double Player::getHousingDemand(Season season) const {
@@ -359,20 +351,12 @@ void Player::processMonth() {
     updateState(currentHouseCells, currentMarketCells, 0);
 }
 
-QList<QPair<int, double>> Player::getBuildingsMonthlyProfit() const {
-    QList<QPair<int, double>> profits;
-    for (Building* building : buildings) {
-        profits.append(qMakePair(building->getCellIndex(), building->getMonthlyProfit()));
-    }
-    return profits;
+QList<QPair<int, double>> Player::getLastMonthProfits() const {
+    return lastMonthProfits;
 }
 
 void Player::setLastMonthProfits(const QList<QPair<int, double>>& profits) {
     lastMonthProfits = profits;
-}
-
-QList<QPair<int, double>> Player::getLastMonthProfits() const {
-    return lastMonthProfits;
 }
 
 void Player::clearLastMonthProfits() {

@@ -42,13 +42,26 @@ GameWindow::~GameWindow()
 void GameWindow::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
-    QPixmap background("D:/Prak/grass.jpg");
+    QPixmap background("D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/grass.jpg");
 
     if (!background.isNull()) {
         painter.drawPixmap(0, 0, width(), height(), background);
     }
 
     QWidget::paintEvent(event);
+}
+
+QString GameWindow::getSeasonName(int month) const
+{
+    // 3 месяца на сезон, блять
+    int seasonIndex = (month / 3) % 4;
+    switch(seasonIndex) {
+    case 0: return "Весна";
+    case 1: return "Лето";
+    case 2: return "Осень";
+    case 3: return "Зима";
+    default: return "Весна";
+    }
 }
 
 void GameWindow::setupGame()
@@ -74,20 +87,21 @@ void GameWindow::setupGame()
     }
 }
 
-// Остальные методы без изменений...
 void GameWindow::updateGameState()
 {
     Player* currentPlayer = players[currentPlayerIndex];
     QColor playerColor = currentPlayer->getColor();
 
+    QString seasonName = getSeasonName(currentMonth);
     QString playerNameColored = QString("<span style='color: %1;'><b>%2</b></span>")
                                     .arg(playerColor.name())
                                     .arg(currentPlayer->getName());
 
-    ui->infoLabel->setText(QString("Ход: %1 | Месяц: %2/%3 | Деньги: <b>%4 у.е.</b>")
+    ui->infoLabel->setText(QString("Ход: %1 | Месяц: %2/%3 | Сезон: %4 | Деньги: <b>%5 у.е.</b>")
                                .arg(playerNameColored)
                                .arg(currentMonth + 1)
                                .arg(totalMonths)
+                               .arg(seasonName)
                                .arg(currentPlayer->getMoney()));
 
     QString playersInfo = "<h3 style='margin: 5px;'>Статистика игроков:</h3>";

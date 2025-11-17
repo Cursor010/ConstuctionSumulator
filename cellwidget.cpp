@@ -83,11 +83,11 @@ void CellWidget::paintEvent(QPaintEvent* event)
             // Определяем текстуру в зависимости от типа дома
             QString texturePath;
             if (building->getType() == Building::HOUSE_CONCRETE) {
-                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/homeConcrete.jpg";
+                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/homeConcrete.jpg";
             } else if (building->getType() == Building::HOUSE_WOOD) {
-                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/homeWood.jpg";
+                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/homeWood.jpg";
             } else if (building->getType() == Building::HOUSE_BRICK) {
-                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/homeBrick.jpg";
+                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/homeBrick.jpg";
             }
 
             QPixmap houseTexture(texturePath);
@@ -142,7 +142,7 @@ void CellWidget::paintEvent(QPaintEvent* event)
             }
 
         } else if (building->getType() == Building::MARKET) {
-            QPixmap marketTexture("D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/shop.PNG");
+            QPixmap marketTexture("D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/shop.jpg");
             if (!marketTexture.isNull()) {
                 // Масштабируем с сохранением пропорций и центрируем
                 QPixmap scaledTexture = marketTexture.scaled(imageRect.width(), imageRect.height(),
