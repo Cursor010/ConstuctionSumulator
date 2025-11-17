@@ -3,21 +3,8 @@
 
 #include <QColor>
 
-// Константы строительства
-const int HOUSE_CONCRETE_COST = 8000000;
-const int HOUSE_WOOD_COST = 8000000;
-const int HOUSE_BRICK_COST = 8000000;
-const int MARKET_COST = 2500000;
-const int HOUSE_BUILD_TIME = 6;
-const int MARKET_BUILD_TIME = 5;
-const int INITIAL_MONEY = 37000000;
-
-// Константы для расчета доходов
-const int BASE_HOUSE_DEMAND = 1000;
-const int BASE_MARKET_REVENUE = 500000;
-const double BASE_HOUSE_PRICE = 10000.0;
-
-class Building {
+class Building
+{
 public:
     enum Type {
         NO_BUILDING,
@@ -33,14 +20,14 @@ public:
     Type getType() const { return type; }
     int getOwnerId() const { return ownerId; }
     int getBuildTime() const { return buildTime; }
-    int getMonthsBuilt() const { return monthsBuilt; }
     int getCost() const { return cost; }
-    bool getIsCompleted() const { return isCompleted; }
+    QColor getOwnerColor() const { return ownerColor; }
     int getCellIndex() const { return cellIndex; }
+    int getMonthsBuilt() const { return monthsBuilt; }
+    bool getIsCompleted() const { return isCompleted; }
     double getTotalArea() const { return totalArea; }
     double getSoldArea() const { return soldArea; }
     double getPricePerSqm() const { return pricePerSqm; }
-    QColor getOwnerColor() const { return ownerColor; }
     double getMonthlyProfit() const { return monthlyProfit; }
 
     // Сеттеры
@@ -55,15 +42,16 @@ private:
     Type type;
     int ownerId;
     int buildTime;
-    int monthsBuilt;
     int cost;
+    QColor ownerColor;
+    int cellIndex;
+
+    int monthsBuilt;
     bool isCompleted;
     double totalArea;
     double soldArea;
     double pricePerSqm;
     double monthlyProfit;
-    QColor ownerColor;
-    int cellIndex;
 };
 
-#endif
+#endif // BUILDING_H

@@ -1,16 +1,13 @@
 #include "player.h"
 #include "building.h"
+#include "gameconfig.h"
 #include <algorithm>
 #include <iostream>
-
-// Инициализация статических констант
-const double Player::BASE_HOUSE_PRICE = 10000.0;
-const double Player::BASE_HOUSE_DEMAND = 1000.0;
-const double Player::BASE_MARKET_REVENUE = 20000.0;
+#include <cmath>
 
 Player::Player(QString playerName, int playerId, QColor playerColor) {
     name = playerName;
-    money = INITIAL_MONEY;
+    money = GameConfig::INITIAL_MONEY;
     id = playerId;
     color = playerColor;
     totalRevenue = 0;
@@ -25,10 +22,10 @@ Player::~Player() {
     }
 }
 
-void Player::updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth) {
+void Player::updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth, const QList<Player*>& allPlayers) {
     Season currentSeason = getSeason(currentMonth);
     processConstruction(newHouseCells, newMarketCells);
-    processMonthlyOperations(currentSeason);
+    processMonthlyOperations(currentSeason, allPlayers);
     previousHouseCells = currentHouseCells;
     previousMarketCells = currentMarketCells;
     currentHouseCells = newHouseCells;
@@ -38,24 +35,10 @@ void Player::updateState(const QList<int>& newHouseCells, const QList<int>& newM
 void Player::processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells) {
     if (isBankrupt) return;
 
-    for (int cell : newHouseCells) {
-        if (!previousHouseCells.contains(cell) && !hasBuildingInCell(cell)) {
-            Building* newHouse = new Building(Building::HOUSE_CONCRETE, id, HOUSE_BUILD_TIME, HOUSE_COST, color, cell);
-            newHouse->setTotalArea(5000.0);
-            newHouse->setPricePerSqm(BASE_HOUSE_PRICE);
-            buildings.append(newHouse);
-        }
-    }
-
-    for (int cell : newMarketCells) {
-        if (!previousMarketCells.contains(cell) && !hasBuildingInCell(cell)) {
-            Building* newMarket = new Building(Building::MARKET, id, MARKET_BUILD_TIME, MARKET_COST, color, cell);
-            buildings.append(newMarket);
-        }
-    }
+    // Эта функция теперь не используется для строительства, строительство через метод build()
 }
 
-void Player::processMonthlyOperations(Season season) {
+void Player::processMonthlyOperations(Season season, const QList<Player*>& allPlayers) {
     if (isBankrupt) return;
 
     for (Building* building : buildings) {
@@ -84,7 +67,7 @@ void Player::processMonthlyOperations(Season season) {
              building->getType() == Building::HOUSE_WOOD ||
              building->getType() == Building::HOUSE_BRICK) &&
             building->getIsCompleted()) {
-            processHousingSales(building, housingDemand);
+            processHousingSales(building, housingDemand, allPlayers);
         }
     }
 
@@ -92,7 +75,7 @@ void Player::processMonthlyOperations(Season season) {
     double marketRevenue = getMarketRevenue(season);
     for (Building* building : buildings) {
         if (building->getType() == Building::MARKET && building->getIsCompleted()) {
-            processMarketRevenue(building, marketRevenue);
+            processMarketRevenue(building, marketRevenue, allPlayers);
         }
     }
 
@@ -103,7 +86,23 @@ void Player::processMonthlyOperations(Season season) {
              building->getType() == Building::HOUSE_WOOD ||
              building->getType() == Building::HOUSE_BRICK)) {
             double progress = static_cast<double>(building->getMonthsBuilt()) / building->getBuildTime();
-            double newPrice = BASE_HOUSE_PRICE * (1.0 + progress * 0.4);
+            double basePrice = 0;
+
+            switch(building->getType()) {
+            case Building::HOUSE_CONCRETE:
+                basePrice = GameConfig::CONCRETE_HOUSE_BASE_PRICE;
+                break;
+            case Building::HOUSE_WOOD:
+                basePrice = GameConfig::WOOD_HOUSE_BASE_PRICE;
+                break;
+            case Building::HOUSE_BRICK:
+                basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
+                break;
+            default:
+                basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
+            }
+
+            double newPrice = basePrice * (1.0 + progress * 0.4);
             building->setPricePerSqm(newPrice);
         }
     }
@@ -121,12 +120,34 @@ void Player::processMonthlyOperations(Season season) {
     }
 }
 
-void Player::processHousingSales(Building* house, double baseDemand) {
+void Player::processHousingSales(Building* house, double baseDemand, const QList<Player*>& allPlayers) {
     if (house->getTotalArea() > house->getSoldArea()) {
         double availableArea = house->getTotalArea() - house->getSoldArea();
-        double demandModifier = 1.0;
+
+        // Учитываем соседние магазины для увеличения спроса
+        int neighborMarkets = countNeighborMarkets(house->getCellIndex(), allPlayers);
+        double neighborBonus = 1.0 + (neighborMarkets * GameConfig::HOUSE_NEIGHBOR_BONUS);
+
+        double demandModifier = neighborBonus;
         double effectiveDemand = baseDemand * demandModifier;
-        double priceModifier = 1.0 - (house->getPricePerSqm() - BASE_HOUSE_PRICE) / BASE_HOUSE_PRICE * 0.1;
+
+        // Модификатор цены (чем дороже, тем меньше спрос)
+        double basePrice = 0;
+        switch(house->getType()) {
+        case Building::HOUSE_CONCRETE:
+            basePrice = GameConfig::CONCRETE_HOUSE_BASE_PRICE;
+            break;
+        case Building::HOUSE_WOOD:
+            basePrice = GameConfig::WOOD_HOUSE_BASE_PRICE;
+            break;
+        case Building::HOUSE_BRICK:
+            basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
+            break;
+        default:
+            basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
+        }
+
+        double priceModifier = 1.0 - (house->getPricePerSqm() - basePrice) / basePrice * 0.1;
 
         double potentialSales = std::min(availableArea, effectiveDemand * priceModifier);
         double revenue = potentialSales * house->getPricePerSqm();
@@ -134,21 +155,80 @@ void Player::processHousingSales(Building* house, double baseDemand) {
         house->setSoldArea(house->getSoldArea() + potentialSales);
         money += revenue;
         totalRevenue += revenue;
-        house->setMonthlyProfit(revenue);
+        house->setMonthlyProfit(house->getMonthlyProfit() + revenue);
     }
 }
 
-void Player::processMarketRevenue(Building* market, double baseRevenue) {
-    double revenueModifier = 1.0;
+void Player::processMarketRevenue(Building* market, double baseRevenue, const QList<Player*>& allPlayers) {
+    // Учитываем соседние дома для увеличения дохода
+    int neighborHouses = countNeighborHouses(market->getCellIndex(), allPlayers);
+    double neighborBonus = 1.0 + (neighborHouses * GameConfig::MARKET_NEIGHBOR_BONUS);
+
+    double revenueModifier = neighborBonus;
     double revenue = baseRevenue * revenueModifier;
 
     money += revenue;
     totalRevenue += revenue;
-    market->setMonthlyProfit(revenue);
+    market->setMonthlyProfit(market->getMonthlyProfit() + revenue);
+}
+
+int Player::countNeighborHouses(int cellIndex, const QList<Player*>& allPlayers) const {
+    int count = 0;
+    QList<int> neighbors = getNeighborCells(cellIndex);
+
+    for (int neighborCell : neighbors) {
+        for (Player* player : allPlayers) {
+            QList<int> houseCells = player->getHouseCells();
+            if (houseCells.contains(neighborCell)) {
+                count++;
+                break;
+            }
+        }
+    }
+
+    return count;
+}
+
+int Player::countNeighborMarkets(int cellIndex, const QList<Player*>& allPlayers) const {
+    int count = 0;
+    QList<int> neighbors = getNeighborCells(cellIndex);
+
+    for (int neighborCell : neighbors) {
+        for (Player* player : allPlayers) {
+            QList<int> marketCells = player->getMarketCells();
+            if (marketCells.contains(neighborCell)) {
+                count++;
+                break;
+            }
+        }
+    }
+
+    return count;
+}
+
+QList<int> Player::getNeighborCells(int cellIndex) const {
+    QList<int> neighbors;
+    int row = cellIndex / 5;
+    int col = cellIndex % 5;
+
+    // Проверяем все 8 направлений
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            if (i == 0 && j == 0) continue; // пропускаем саму клетку
+
+            int newRow = row + i;
+            int newCol = col + j;
+
+            if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5) {
+                neighbors.append(newRow * 5 + newCol);
+            }
+        }
+    }
+
+    return neighbors;
 }
 
 Player::Season Player::getSeason(int month) const {
-    // 3 месяца на сезон, блять
     int seasonIndex = (month / 3) % 4;
     switch(seasonIndex) {
     case 0: return Season::SPRING;
@@ -160,25 +240,25 @@ Player::Season Player::getSeason(int month) const {
 }
 
 double Player::getHousingDemand(Season season) const {
-    double baseDemand = BASE_HOUSE_DEMAND;
+    double baseDemand = GameConfig::BASE_HOUSE_DEMAND;
 
     switch (season) {
-    case Season::SPRING: return baseDemand * 1.2;
-    case Season::SUMMER: return baseDemand * 1.1;
-    case Season::AUTUMN: return baseDemand * 1.5;
-    case Season::WINTER: return baseDemand * 0.8;
+    case Season::SPRING: return baseDemand * GameConfig::SPRING_HOUSE_MODIFIER;
+    case Season::SUMMER: return baseDemand * GameConfig::SUMMER_HOUSE_MODIFIER;
+    case Season::AUTUMN: return baseDemand * GameConfig::AUTUMN_HOUSE_MODIFIER;
+    case Season::WINTER: return baseDemand * GameConfig::WINTER_HOUSE_MODIFIER;
     }
     return baseDemand;
 }
 
 double Player::getMarketRevenue(Season season) const {
-    double baseRevenue = BASE_MARKET_REVENUE;
+    double baseRevenue = GameConfig::BASE_MARKET_REVENUE;
 
     switch (season) {
-    case Season::SPRING: return baseRevenue * 1.0;
-    case Season::SUMMER: return baseRevenue * 1.1;
-    case Season::AUTUMN: return baseRevenue * 1.3;
-    case Season::WINTER: return baseRevenue * 1.6;
+    case Season::SPRING: return baseRevenue * GameConfig::SPRING_MARKET_MODIFIER;
+    case Season::SUMMER: return baseRevenue * GameConfig::SUMMER_MARKET_MODIFIER;
+    case Season::AUTUMN: return baseRevenue * GameConfig::AUTUMN_MARKET_MODIFIER;
+    case Season::WINTER: return baseRevenue * GameConfig::WINTER_MARKET_MODIFIER;
     }
     return baseRevenue;
 }
@@ -303,10 +383,14 @@ bool Player::canBuild(Building::Type type) {
     if (isBankrupt) return false;
 
     int cost = 0;
-    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
-        cost = HOUSE_COST;
+    if (type == Building::HOUSE_CONCRETE) {
+        cost = GameConfig::CONCRETE_HOUSE_COST;
+    } else if (type == Building::HOUSE_WOOD) {
+        cost = GameConfig::WOOD_HOUSE_COST;
+    } else if (type == Building::HOUSE_BRICK) {
+        cost = GameConfig::BRICK_HOUSE_COST;
     } else if (type == Building::MARKET) {
-        cost = MARKET_COST;
+        cost = GameConfig::MARKET_COST;
     }
     return money >= cost;
 }
@@ -318,20 +402,34 @@ Building* Player::build(Building::Type type, int cellIndex) {
 
     int buildTime = 0;
     int cost = 0;
+    double area = 0;
+    double basePrice = 0;
 
-    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
-        buildTime = HOUSE_BUILD_TIME;
-        cost = HOUSE_COST;
+    if (type == Building::HOUSE_CONCRETE) {
+        buildTime = GameConfig::CONCRETE_HOUSE_BUILD_TIME;
+        cost = GameConfig::CONCRETE_HOUSE_COST;
+        area = GameConfig::CONCRETE_HOUSE_AREA;
+        basePrice = GameConfig::CONCRETE_HOUSE_BASE_PRICE;
+    } else if (type == Building::HOUSE_WOOD) {
+        buildTime = GameConfig::WOOD_HOUSE_BUILD_TIME;
+        cost = GameConfig::WOOD_HOUSE_COST;
+        area = GameConfig::WOOD_HOUSE_AREA;
+        basePrice = GameConfig::WOOD_HOUSE_BASE_PRICE;
+    } else if (type == Building::HOUSE_BRICK) {
+        buildTime = GameConfig::BRICK_HOUSE_BUILD_TIME;
+        cost = GameConfig::BRICK_HOUSE_COST;
+        area = GameConfig::BRICK_HOUSE_AREA;
+        basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
     } else if (type == Building::MARKET) {
-        buildTime = MARKET_BUILD_TIME;
-        cost = MARKET_COST;
+        buildTime = GameConfig::MARKET_BUILD_TIME;
+        cost = GameConfig::MARKET_COST;
     }
 
     Building* newBuilding = new Building(type, id, buildTime, cost, color, cellIndex);
 
     if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
-        newBuilding->setTotalArea(5000.0);
-        newBuilding->setPricePerSqm(BASE_HOUSE_PRICE);
+        newBuilding->setTotalArea(area);
+        newBuilding->setPricePerSqm(basePrice);
     }
 
     buildings.append(newBuilding);
@@ -347,8 +445,8 @@ Building* Player::build(Building::Type type, int cellIndex) {
     return newBuilding;
 }
 
-void Player::processMonth() {
-    updateState(currentHouseCells, currentMarketCells, 0);
+void Player::processMonth(const QList<Player*>& allPlayers) {
+    updateState(currentHouseCells, currentMarketCells, 0, allPlayers);
 }
 
 QList<QPair<int, double>> Player::getLastMonthProfits() const {

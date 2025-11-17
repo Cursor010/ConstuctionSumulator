@@ -6,6 +6,7 @@
 #include <QList>
 #include <QPair>
 #include "building.h"
+#include "gameconfig.h"
 
 class Player
 {
@@ -29,19 +30,9 @@ public:
     Player(QString playerName, int playerId, QColor playerColor);
     ~Player();
 
-    // Константы
-    static const int INITIAL_MONEY = 150000;
-    static const int HOUSE_COST = 50000;
-    static const int MARKET_COST = 80000;
-    static const int HOUSE_BUILD_TIME = 6;
-    static const int MARKET_BUILD_TIME = 5;
-    static const double BASE_HOUSE_DEMAND;
-    static const double BASE_MARKET_REVENUE;
-    static const double BASE_HOUSE_PRICE;
-
     // Основные методы
-    void updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth);
-    void processMonth();
+    void updateState(const QList<int>& newHouseCells, const QList<int>& newMarketCells, int currentMonth, const QList<Player*>& allPlayers);
+    void processMonth(const QList<Player*>& allPlayers);
     bool canBuild(Building::Type type);
     Building* build(Building::Type type, int cellIndex);
     double calculateTotalCapital() const;
@@ -60,6 +51,7 @@ public:
     QList<int> getHouseCells() const;
     QList<int> getMarketCells() const;
     QList<int> getAllBuildingsCells() const;
+    QList<Building*> getBuildings() const { return buildings; }
 
     // Методы для получения прибыли
     QList<QPair<int, double>> getLastMonthProfits() const;
@@ -68,9 +60,14 @@ public:
 
 private:
     void processConstruction(const QList<int>& newHouseCells, const QList<int>& newMarketCells);
-    void processMonthlyOperations(Season season);
-    void processHousingSales(Building* house, double baseDemand);
-    void processMarketRevenue(Building* market, double baseRevenue);
+    void processMonthlyOperations(Season season, const QList<Player*>& allPlayers);
+    void processHousingSales(Building* house, double baseDemand, const QList<Player*>& allPlayers);
+    void processMarketRevenue(Building* market, double baseRevenue, const QList<Player*>& allPlayers);
+
+    int countNeighborHouses(int cellIndex, const QList<Player*>& allPlayers) const;
+    int countNeighborMarkets(int cellIndex, const QList<Player*>& allPlayers) const;
+    QList<int> getNeighborCells(int cellIndex) const;
+
     Season getSeason(int month) const;
     double getHousingDemand(Season season) const;
     double getMarketRevenue(Season season) const;

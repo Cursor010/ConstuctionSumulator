@@ -18,6 +18,7 @@ CONFIG += c++17
 SOURCES += \
     building.cpp \
     cellwidget.cpp \
+    gameconfig.cpp \
     gamewindow.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
 HEADERS += \
     building.h \
     cellwidget.h \
+    gameconfig.h \
     gamewindow.h \
     mainwindow.h \
     player.h \

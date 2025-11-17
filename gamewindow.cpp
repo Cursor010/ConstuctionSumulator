@@ -13,7 +13,7 @@ GameWindow::GameWindow(MainWindow* mainWindow, const QStringList& playerNames, i
     : QWidget(parent),
     ui(new Ui::GameWindow),
     mainWindow(mainWindow),
-    totalMonths(totalMonths),
+    totalMonths(GameConfig::TOTAL_MONTHS),
     currentMonth(0),
     currentPlayerIndex(0),
     currentPlayerHasBuilt(false),
@@ -152,7 +152,7 @@ void GameWindow::nextPlayer()
     if (currentPlayerIndex == 0) {
         currentMonth++;
         for (Player* player : players) {
-            player->processMonth();
+            player->processMonth(players); // передаем список всех игроков
         }
 
         if (currentMonth >= totalMonths) {
