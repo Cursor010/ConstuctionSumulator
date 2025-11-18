@@ -1,4 +1,7 @@
-﻿  main.cpp
+﻿  BuildingType.cpp
+  main.cpp
 C:\Users\Nikita\Desktop\prakkk\ConstuctionSumulator\back\Back\main.cpp(123,46): warning C4244: +=: преобразование "double" в "int", возможна потеря данных
 C:\Users\Nikita\Desktop\prakkk\ConstuctionSumulator\back\Back\main.cpp(661,15): warning C4244: аргумент: преобразование "time_t" в "unsigned int", возможна потеря данных
+  Season.cpp
+  Создание кода...
   Back.vcxproj -> C:\Users\Nikita\Desktop\prakkk\ConstuctionSumulator\back\Back\x64\Debug\Back.exe

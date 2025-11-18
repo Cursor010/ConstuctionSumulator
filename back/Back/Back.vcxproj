@@ -127,7 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BuildingType.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Season.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BuildingType.h" />
+    <ClInclude Include="Season.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
