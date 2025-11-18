@@ -1,4 +1,5 @@
 #include "building.h"
+#include <iostream>
 
 Building::Building(Type t, int owner, int buildTime, int buildingCost, QColor color, int cellIndex)
     : type(t), ownerId(owner), buildTime(buildTime), cost(buildingCost),
@@ -17,6 +18,7 @@ void Building::progressMonth() {
         monthsBuilt++;
         if (monthsBuilt >= buildTime) {
             isCompleted = true;
+            std::cout << "Building in cell " << cellIndex << " completed construction!" << std::endl;
         }
     }
 }

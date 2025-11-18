@@ -48,6 +48,10 @@ public:
     static const double SUMMER_MARKET_MODIFIER;
     static const double AUTUMN_MARKET_MODIFIER;
     static const double WINTER_MARKET_MODIFIER;
+
+    // Дополнительные параметры для продажи квартир
+    static const double BASE_HOUSE_SALES_RATE; // базовая скорость продажи квартир (% от площади в месяц)
+    static const double PRICE_SENSITIVITY;     // чувствительность спроса к цене
 };
 
 #endif // GAMECONFIG_H

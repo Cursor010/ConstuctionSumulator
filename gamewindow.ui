@@ -34,9 +34,22 @@
         <string>Ход: | Месяц: 0/0 | Деньги: 0 у.е.</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignLeft</set>
+        <set>Qt::AlignLeading</set>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
@@ -44,6 +57,19 @@
         <enum>QLayout::SetFixedSize</enum>
        </property>
       </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <layout class="QHBoxLayout" name="buttonsHorizontalLayout">
@@ -63,7 +89,7 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     padding: 8px 12px;
     }
 
@@ -101,7 +127,7 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     padding: 8px 12px;
     }
 
@@ -139,7 +165,7 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     padding: 8px 12px;
     }
 
@@ -177,7 +203,7 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     padding: 8px 12px;
     }
 
@@ -215,7 +241,7 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     padding: 8px 12px;
     }
 
@@ -253,7 +279,7 @@
     border-radius: 10px;
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 10px;
     padding: 8px 12px;
     }
 
@@ -278,6 +304,19 @@
       </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <widget class="QScrollArea" name="scrollArea">
@@ -305,7 +344,7 @@
         <x>0</x>
         <y>0</y>
         <width>348</width>
-        <height>598</height>
+        <height>786</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -319,11 +358,11 @@
          <property name="text">
           <string>Состояние игроков:</string>
          </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
          <property name="alignment">
           <set>Qt::AlignTop</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

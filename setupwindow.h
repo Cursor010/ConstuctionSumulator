@@ -1,7 +1,11 @@
 #ifndef SETUPWINDOW_H
 #define SETUPWINDOW_H
 
+#include "ui_setupwindow.h"
+#include "gamewindow.h"
 #include <QWidget>
+#include <QMessageBox>
+#include <QCloseEvent>
 
 namespace Ui {
 class SetupWindow;

@@ -25,6 +25,9 @@ public:
         bool isCompleted;
         Building::Type type;
         double monthlyProfit;
+        double totalArea;
+        double soldArea;
+        double pricePerSqm;
     };
 
     Player(QString playerName, int playerId, QColor playerColor);
@@ -74,10 +77,12 @@ private:
     void payConstructionCosts();                                   // п.1
     void receiveMarketRevenue(const QList<Player*>& allPlayers, int currentMonth);   // п.3
     void updateHousingPrices();                                    // п.4
+    void sellHousing(const QList<Player*>& allPlayers, int currentMonth);            // п.2 - продажа квартир
 
     // Вспомогательные методы
     QList<int> getNeighborCells(int cellIndex) const;
     bool hasBuildingInCell(int cellIndex) const;
+    double calculateHouseSales(Building* house, const QList<Player*>& allPlayers, int currentMonth);
 
     QString name;
     double money;  // в у.е.

@@ -1,11 +1,21 @@
 #ifndef GAMEWINDOW_H
 #define GAMEWINDOW_H
 
+#include "building.h"
+#include "setupwindow.h"
+#include "player.h"
+#include "cellwidget.h"
+#include "building.h"
+#include "realestateagency.h"
+
 #include <QWidget>
 #include <QVector>
-#include "building.h"
+#include <QMessageBox>
+#include <QTimer>
+#include <QPainter>
+#include <QPixmap>
 
-class MainWindow;
+class SetupWindow;
 class Player;
 class CellWidget;
 
@@ -18,7 +28,7 @@ class GameWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent = nullptr);
+    explicit GameWindow(SetupWindow* setupWindow, const QStringList& playerNames, int totalMonths, QWidget* parent = nullptr);
     ~GameWindow();
 
 protected:
@@ -42,7 +52,7 @@ private:
     QString getSeasonName(int month) const;
 
     Ui::GameWindow* ui;
-    MainWindow* mainWindow;
+    SetupWindow* setupWindow;
     QVector<Player*> players;
     QVector<CellWidget*> cells;
     int totalMonths;

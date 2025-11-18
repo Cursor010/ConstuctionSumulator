@@ -29,3 +29,7 @@ const double GameConfig::SPRING_MARKET_MODIFIER = 1.0;      // без измен
 const double GameConfig::SUMMER_MARKET_MODIFIER = 1.1;      // +10% летом
 const double GameConfig::AUTUMN_MARKET_MODIFIER = 1.2;      // +20% осенью
 const double GameConfig::WINTER_MARKET_MODIFIER = 1.4;      // +40% зимой
+
+// Дополнительные параметры для продажи квартир
+const double GameConfig::BASE_HOUSE_SALES_RATE = 0.15;      // 15% площади в месяц (увеличили)
+const double GameConfig::PRICE_SENSITIVITY = 0.001;         // чувствительность к цене

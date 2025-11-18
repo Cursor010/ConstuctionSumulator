@@ -1,19 +1,10 @@
 #include "gamewindow.h"
 #include "ui_gamewindow.h"
-#include "mainwindow.h"
-#include "player.h"
-#include "cellwidget.h"
-#include "building.h"
-#include "realestateagency.h"
-#include <QMessageBox>
-#include <QTimer>
-#include <QPainter>
-#include <QPixmap>
 
-GameWindow::GameWindow(MainWindow* mainWindow, const QStringList& playerNames, int totalMonths, QWidget* parent)
+GameWindow::GameWindow(SetupWindow* setupWindow, const QStringList& playerNames, int totalMonths, QWidget* parent)
     : QWidget(parent),
     ui(new Ui::GameWindow),
-    mainWindow(mainWindow),
+    setupWindow(setupWindow),
     totalMonths(totalMonths),
     currentMonth(0),
     currentPlayerIndex(0),
@@ -87,6 +78,7 @@ void GameWindow::setupGame()
     }
 }
 
+// В методе updateGameState() обновляем отображение информации о зданиях:
 void GameWindow::updateGameState()
 {
     Player* currentPlayer = players[currentPlayerIndex];
@@ -120,6 +112,7 @@ void GameWindow::updateGameState()
             QString buildingName;
             QString status;
             QString profitText;
+            QString salesInfo;
             QColor profitColor = Qt::black;
 
             switch (building.type) {
@@ -141,6 +134,13 @@ void GameWindow::updateGameState()
 
             if (building.isCompleted) {
                 status = "✅ Завершено";
+                if (building.type != Building::MARKET) {
+                    double soldPercent = (building.soldArea / building.totalArea) * 100;
+                    salesInfo = QString(" | Продано: %1% (%2/%3 кв.м.)")
+                                    .arg(soldPercent, 0, 'f', 1)
+                                    .arg(building.soldArea, 0, 'f', 0)
+                                    .arg(building.totalArea, 0, 'f', 0);
+                }
             } else {
                 status = QString("🔄 Строится (%1/%2)")
                              .arg(building.buildProgress)
@@ -161,14 +161,22 @@ void GameWindow::updateGameState()
                 profitText = "➖ 0 у.е.";
             }
 
+            // Добавляем информацию о цене для домов
+            QString priceInfo = "";
+            if (building.type != Building::MARKET) {
+                priceInfo = QString(" | Цена: %1 у.е./кв.м.").arg(building.pricePerSqm, 0, 'f', 0);
+            }
+
             buildingsInfo += QString("<div style='margin: 2px; padding: 3px; border: 1px solid %1; font-size: small;'>"
                                      "<b>%2</b> (клетка %3)<br>"
-                                     "%4 | %5"
+                                     "%4%5%6 | %7"
                                      "</div>")
                                  .arg(profitColor.name())
                                  .arg(buildingName)
                                  .arg(building.cellIndex + 1)
                                  .arg(status)
+                                 .arg(salesInfo)
+                                 .arg(priceInfo)
                                  .arg(profitText);
         }
     }
@@ -242,12 +250,14 @@ void GameWindow::nextPlayer()
     if (currentPlayerIndex == 0) {
         currentMonth++;
 
-        // Обрабатываем продажи жилья через риэлторское агентство
+        //std::cout << "=== MONTH " << currentMonth << " STARTED ===" << std::endl;
+
+        // Сначала обрабатываем продажи жилья через риэлторское агентство
         Player::Season currentSeason = players[0]->getSeason(currentMonth);
         double totalDemand = players[0]->getHousingDemand(currentSeason);
         RealEstateAgency::processHousingSales(totalDemand, players);
 
-        // Обработка месяца для всех игроков
+        // Затем обрабатываем месяц для всех игроков (строительство, магазины, цены)
         for (int i = 0; i < players.size(); ++i) {
             players[i]->processMonth(players, currentMonth);
         }
@@ -262,7 +272,6 @@ void GameWindow::nextPlayer()
     buildingTypeToBuild = Building::NO_BUILDING;
     updateGameState();
 }
-
 void GameWindow::showMonthlyProfit()
 {
     Player* currentPlayer = players[currentPlayerIndex];
@@ -391,8 +400,8 @@ void GameWindow::on_skipTurnButton_clicked()
 
 void GameWindow::on_backButton_clicked()
 {
-    if (mainWindow) {
-        mainWindow->show();
+    if (setupWindow) {
+        setupWindow->show();
     }
     this->close();
 }

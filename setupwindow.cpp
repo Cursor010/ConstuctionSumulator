@@ -1,8 +1,4 @@
 #include "setupwindow.h"
-#include "ui_setupwindow.h"
-#include "gamewindow.h"
-#include <QMessageBox>
-#include <QCloseEvent>
 
 SetupWindow::SetupWindow(QWidget *parent)
     : QWidget(parent)
@@ -113,7 +109,7 @@ void SetupWindow::on_startButton_clicked()
     int totalMonths = ui->monthsSpin->value();
 
     // Создаем и показываем игровое окно
-    GameWindow *gameWindow = new GameWindow(nullptr, savedNames, totalMonths);
+    GameWindow *gameWindow = new GameWindow(this, savedNames, totalMonths);
     gameWindow->show();
 
     // Закрываем окно настройки
