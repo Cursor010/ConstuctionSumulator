@@ -502,7 +502,7 @@ void GameWindow::on_setAdvertisingButton_clicked()
     // Списываем деньги
     currentPlayer->addMoney(-totalCost);
 
-    currentPlayerHasBuilt = true;
+   // currentPlayerHasBuilt = true;
     updateGameState();
 
     QMessageBox::information(this, "Успех",
