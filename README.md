@@ -6,8 +6,6 @@
 
 A strategic construction and investment simulation game built with C++ and Qt framework.
 
-![Game Screenshot](screenshots/gameplay.png)
-
 ## 🎮 About the Game
 
 Construction Simulator is a strategic business simulation where players compete in the real estate market. Build various types of buildings, manage advertising budgets, and make strategic decisions to become the most successful construction tycoon!
