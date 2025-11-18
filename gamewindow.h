@@ -7,6 +7,7 @@
 #include "cellwidget.h"
 #include "building.h"
 #include "realestateagency.h"
+#include "gameconfig.h"  // ДОБАВЬТЕ ЭТУ СТРОКУ
 
 #include <QWidget>
 #include <QVector>
@@ -42,6 +43,8 @@ private slots:
     void on_skipTurnButton_clicked();
     void on_backButton_clicked();
     void onCellClicked(int cellIndex);
+
+    void on_setAdvertisingButton_clicked();
 
 private:
     void setupGame();

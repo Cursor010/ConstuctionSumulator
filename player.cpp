@@ -11,12 +11,21 @@ Player::Player(QString playerName, int playerId, QColor playerColor) {
     id = playerId;
     color = playerColor;
     isBankrupt = false;
+    housingAdBudget = 0;
+    marketAdBudget = 0;
+    lastHousingAdBudget = 0;
 }
 
 Player::~Player() {
     for (int i = 0; i < buildings.size(); ++i) {
         delete buildings[i];
     }
+}
+
+void Player::updateAdBudgets() {
+    lastHousingAdBudget = housingAdBudget;
+    housingAdBudget = 0;
+    marketAdBudget = 0;
 }
 
 void Player::processMonth(const QList<Player*>& allPlayers, int currentMonth) {
@@ -68,13 +77,11 @@ void Player::payConstructionCosts() {
                 std::cout << "Player " << id << " paid construction cost for cell "
                           << building->getCellIndex() << ": -" << monthlyCost << std::endl;
 
-                // Если дом только что достроился
                 if (building->getIsCompleted()) {
                     std::cout << "Player " << id << " COMPLETED building in cell "
                               << building->getCellIndex() << "! Ready to sell apartments." << std::endl;
                 }
             } else {
-                // Не можем платить - здание не прогрессирует
                 building->addToMonthlyProfit(0);
                 std::cout << "Player " << id << " cannot pay construction cost for cell "
                           << building->getCellIndex() << std::endl;
@@ -86,7 +93,6 @@ void Player::payConstructionCosts() {
 void Player::sellHousing(const QList<Player*>& allPlayers, int currentMonth) {
     for (int i = 0; i < buildings.size(); ++i) {
         Building* building = buildings[i];
-        // Продаем квартиры только в построенных домах, где есть непроданная площадь
         if ((building->getType() == Building::HOUSE_CONCRETE ||
              building->getType() == Building::HOUSE_WOOD ||
              building->getType() == Building::HOUSE_BRICK) &&
@@ -112,12 +118,11 @@ void Player::sellHousing(const QList<Player*>& allPlayers, int currentMonth) {
 }
 
 double Player::calculateHouseSales(Building* house, const QList<Player*>& allPlayers, int currentMonth) {
-    // Проверяем, есть ли непроданная площадь
     double currentSoldArea = house->getSoldArea();
     double totalArea = house->getTotalArea();
 
     if (currentSoldArea >= totalArea) {
-        return 0.0; // Все уже продано
+        return 0.0;
     }
 
     Season currentSeason = getSeason(currentMonth);
@@ -135,14 +140,17 @@ double Player::calculateHouseSales(Building* house, const QList<Player*>& allPla
     int neighborMarkets = countNeighborMarkets(house->getCellIndex(), allPlayers);
     double neighborBonus = 1.0 + (neighborMarkets * GameConfig::HOUSE_NEIGHBOR_BONUS);
 
+    // Эффект от рекламы жилья (0.5% за каждую 1 тыс. у.е. в этом и прошлом месяце)
+    double adBonusHousing = 1.0 + (housingAdBudget + lastHousingAdBudget) * (0.5 / 100.0);
+
     // Доступная для продажи площадь
     double availableArea = totalArea - currentSoldArea;
 
-    // Базовый объем продаж в этом месяце (процент от оставшейся площади)
+    // Базовый объем продаж в этом месяце
     double baseMonthlySales = availableArea * GameConfig::BASE_HOUSE_SALES_RATE;
 
-    // Увеличиваем продажи за счет соседних магазинов и сезона
-    double adjustedSales = baseMonthlySales * neighborBonus * seasonalModifier;
+    // Увеличиваем продажи за счет всех факторов
+    double adjustedSales = baseMonthlySales * neighborBonus * seasonalModifier * adBonusHousing;
 
     // Учитываем влияние цены на спрос
     double basePrice = 0;
@@ -160,18 +168,13 @@ double Player::calculateHouseSales(Building* house, const QList<Player*>& allPla
         basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
     }
 
-    // Чем выше цена относительно базовой, тем меньше спрос
     double priceRatio = house->getPricePerSqm() / basePrice;
     double priceFactor = 1.0 - (priceRatio - 1.0) * GameConfig::PRICE_SENSITIVITY * 100;
-    priceFactor = qMax(0.1, priceFactor); // Минимум 10% продаж даже при высокой цене
+    priceFactor = qMax(0.1, priceFactor);
 
     // Финальный объем продаж в этом месяце
     double monthlySalesArea = adjustedSales * priceFactor;
-
-    // Не можем продать больше, чем есть в наличии
     monthlySalesArea = qMin(monthlySalesArea, availableArea);
-
-    // Не можем продать отрицательное количество
     monthlySalesArea = qMax(0.0, monthlySalesArea);
 
     // Обновляем проданную площадь
@@ -180,12 +183,13 @@ double Player::calculateHouseSales(Building* house, const QList<Player*>& allPla
     // Выручка от продаж в этом месяце
     double revenue = monthlySalesArea * house->getPricePerSqm();
 
-    // Отладочная информация
     std::cout << "House sales calculation for cell " << house->getCellIndex() << ":\n"
               << "  Available area: " << availableArea << "\n"
               << "  Base monthly sales: " << baseMonthlySales << "\n"
               << "  Neighbor bonus: " << neighborBonus << " (markets: " << neighborMarkets << ")\n"
               << "  Seasonal modifier: " << seasonalModifier << "\n"
+              << "  Ad bonus: " << adBonusHousing << " (housing ad: " << housingAdBudget
+              << ", last: " << lastHousingAdBudget << ")\n"
               << "  Price factor: " << priceFactor << " (price ratio: " << priceRatio << ")\n"
               << "  Final monthly sales: " << monthlySalesArea << "\n"
               << "  Revenue: " << revenue << std::endl;
@@ -203,22 +207,31 @@ void Player::receiveMarketRevenue(const QList<Player*>& allPlayers, int currentM
             // Базовая прибыль магазина
             double revenue = baseRevenue;
 
-            // Бонус за соседние дома (если есть)
+            // Бонус за соседние дома
             int neighborHouses = countNeighborHouses(building->getCellIndex(), allPlayers);
             if (neighborHouses > 0) {
                 double neighborBonus = 1.0 + (neighborHouses * GameConfig::MARKET_NEIGHBOR_BONUS);
                 revenue *= neighborBonus;
             }
 
+            // Эффект от рекламы магазинов (3% за каждые 0.5 тыс. у.е.)
+            double adBonusMarket = 1.0 + (marketAdBudget / 0.5) * (3.0 / 100.0);
+            revenue *= adBonusMarket;
+
             money += revenue;
             building->addToMonthlyProfit(revenue);
 
             std::cout << "Player " << id << " market revenue in cell "
                       << building->getCellIndex() << ": +" << revenue
-                      << " (neighbors: " << neighborHouses << ")" << std::endl;
+                      << " (neighbors: " << neighborHouses
+                      << ", ad bonus: " << adBonusMarket << ")" << std::endl;
         }
     }
 }
+
+// ... остальные методы без изменений (updateHousingPrices, countNeighborHouses, countNeighborMarkets,
+// getNeighborCells, getSeason, getHousingDemand, getMarketRevenue, hasBuildingInCell, calculateTotalCapital,
+// getAllBuildings, getHouseCells, getMarketCells, canBuild, build, getLastMonthProfits, clearLastMonthProfits)
 
 void Player::updateHousingPrices() {
     for (int i = 0; i < buildings.size(); ++i) {
@@ -245,12 +258,10 @@ void Player::updateHousingPrices() {
             }
 
             if (!building->getIsCompleted()) {
-                // Для строящихся домов цена растет
                 progress = static_cast<double>(building->getMonthsBuilt()) / building->getBuildTime();
             } else {
-                // Для построенных домов цена медленно растет со временем
                 int monthsCompleted = building->getMonthsBuilt() - building->getBuildTime();
-                progress = 1.0 + (monthsCompleted * 0.01); // +1% за каждый месяц после завершения
+                progress = 1.0 + (monthsCompleted * 0.01);
             }
 
             double newPrice = basePrice * (1.0 + progress * 0.3);
@@ -261,10 +272,6 @@ void Player::updateHousingPrices() {
         }
     }
 }
-
-// ... остальные методы без изменений ...
-
-// Остальные методы без изменений (countNeighborHouses, countNeighborMarkets, getNeighborCells, getSeason, getHousingDemand, getMarketRevenue, hasBuildingInCell, calculateTotalCapital, getAllBuildings, getHouseCells, getMarketCells, canBuild, build, getLastMonthProfits, clearLastMonthProfits)
 
 int Player::countNeighborHouses(int cellIndex, const QList<Player*>& allPlayers) const {
     int count = 0;
@@ -309,7 +316,6 @@ QList<int> Player::getNeighborCells(int cellIndex) const {
     int row = cellIndex / 5;
     int col = cellIndex % 5;
 
-    // Соседние клетки (включая диагональные)
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             if (i == 0 && j == 0) continue;
@@ -411,6 +417,8 @@ QList<Player::BuildingInfo> Player::getAllBuildings() const {
         info.totalArea = building->getTotalArea();
         info.soldArea = building->getSoldArea();
         info.pricePerSqm = building->getPricePerSqm();
+        info.housingAdBudget = housingAdBudget;
+        info.marketAdBudget = marketAdBudget;
         allBuildings.append(info);
     }
     return allBuildings;
