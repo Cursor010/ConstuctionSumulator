@@ -11,13 +11,11 @@ QList<RealEstateAgency::HousingOffer> RealEstateAgency::collectAllOffers(const Q
         QList<Building*> buildings = player->getBuildings();
         for (int j = 0; j < buildings.size(); ++j) {
             Building* building = buildings[j];
-            // Предлагаем жилье из построенных домов
             if ((building->getType() == Building::HOUSE_CONCRETE ||
                  building->getType() == Building::HOUSE_WOOD ||
                  building->getType() == Building::HOUSE_BRICK) &&
                 building->getIsCompleted()) {
 
-                // Доступная площадь для продажи (все непроданное)
                 double availableArea = building->getTotalArea() - building->getSoldArea();
                 if (availableArea > 0) {
                     HousingOffer offer;
@@ -49,7 +47,6 @@ void RealEstateAgency::satisfyDemand(double totalDemand, QList<HousingOffer>& of
         HousingOffer& offer = offers[i];
         if (remainingDemand <= 0) break;
 
-        // Учитываем соседние магазины для увеличения спроса на этот дом
         int neighborMarkets = offer.player->countNeighborMarkets(offer.cellIndex, allPlayers);
         double neighborBonus = 1.0;
         if (neighborMarkets > 0) {
@@ -58,16 +55,14 @@ void RealEstateAgency::satisfyDemand(double totalDemand, QList<HousingOffer>& of
 
         double effectiveDemand = remainingDemand * neighborBonus;
 
-        // Продаем столько, сколько можем из этого предложения
         double canSell = qMin(offer.availableArea, effectiveDemand);
         double revenue = canSell * offer.pricePerSqm;
 
-        // Обновляем состояние
         offer.building->setSoldArea(offer.building->getSoldArea() + canSell);
         offer.player->addMoney(revenue);
         offer.building->addToMonthlyProfit(revenue);
 
-        remainingDemand -= canSell / neighborBonus; // Уменьшаем общий спрос
+        remainingDemand -= canSell / neighborBonus;
 
         qDebug() << "Sold" << canSell << "sqm from cell" << offer.cellIndex
                  << "for" << revenue << "at price" << offer.pricePerSqm
@@ -80,7 +75,6 @@ void RealEstateAgency::satisfyDemand(double totalDemand, QList<HousingOffer>& of
 }
 
 void RealEstateAgency::processHousingSales(double totalDemand, const QList<Player*>& allPlayers) {
-    // ВКЛЮЧАЕМ централизованную систему продаж
     QList<HousingOffer> offers = collectAllOffers(allPlayers);
     sortOffersByPrice(offers);
     satisfyDemand(totalDemand, offers, allPlayers);

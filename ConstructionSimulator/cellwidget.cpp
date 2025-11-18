@@ -9,7 +9,6 @@ CellWidget::CellWidget(int index, QWidget *parent)
 {
     setFixedSize(100, 100);
 
-    // Инициализация для отображения прибыли
     profitLabel = new QLabel(this);
     profitLabel->setAlignment(Qt::AlignCenter);
     profitLabel->setStyleSheet("QLabel { font-weight: bold; font-size: 10px; }");
@@ -22,7 +21,6 @@ CellWidget::CellWidget(int index, QWidget *parent)
 }
 
 CellWidget::~CellWidget() {
-    // Не удаляем building здесь, так как им управляет Player
 }
 
 Building* CellWidget::getBuilding() const {
@@ -59,57 +57,46 @@ void CellWidget::paintEvent(QPaintEvent* event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // Рисуем границу клетки
     painter.setPen(QPen(Qt::black, 1));
     painter.drawRect(rect().adjusted(0, 0, -1, -1));
 
-    // Если есть здание
     if (building) {
         QColor ownerColor = building->getOwnerColor();
 
-        // Область для изображения здания (уменьшенная, чтобы оставить место для текста прибыли)
         QRect imageRect(15, 20, width() - 30, height() - 45);
 
-        // Область для подложки цвета игрока (компактная)
         QRect footerRect(5, height() - 22, width() - 10, 12);
 
-        // Область для текста прогресса строительства
         QRect progressRect(5, height() - 22, width() - 10, 12);
 
         if (building->getType() == Building::HOUSE_CONCRETE ||
             building->getType() == Building::HOUSE_WOOD ||
             building->getType() == Building::HOUSE_BRICK) {
 
-            // Определяем текстуру в зависимости от типа дома
             QString texturePath;
             if (building->getType() == Building::HOUSE_CONCRETE) {
-                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/homeConcrete.jpg";
+                texturePath = "../assets/textures/homeConcrete.jpg";
             } else if (building->getType() == Building::HOUSE_WOOD) {
-                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/homeWood.jpg";
+                texturePath = "../assets/textures/homeWood.jpg";
             } else if (building->getType() == Building::HOUSE_BRICK) {
-                texturePath = "D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/homeBrick.jpg";
+                texturePath = "../assets/textures/homeBrick.jpg";
             }
 
             QPixmap houseTexture(texturePath);
             if (!houseTexture.isNull()) {
-                // Масштабируем с сохранением пропорций и центрируем
                 QPixmap scaledTexture = houseTexture.scaled(imageRect.width(), imageRect.height(),
                                                             Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-                // Вычисляем позицию для центрирования
                 int x = imageRect.x() + (imageRect.width() - scaledTexture.width()) / 2;
                 int y = imageRect.y() + (imageRect.height() - scaledTexture.height()) / 2;
 
                 painter.drawPixmap(x, y, scaledTexture);
             } else {
-                // Fallback: рисуем стилизованный дом если текстура не загрузилась
                 painter.setBrush(ownerColor.lighter(150));
                 painter.setPen(QPen(Qt::black, 1));
 
-                // Основание дома (уменьшенное)
                 painter.drawRect(imageRect.x() + 5, imageRect.y() + 10, imageRect.width() - 10, imageRect.height() - 20);
 
-                // Крыша
                 QPolygon roof;
                 roof << QPoint(imageRect.x() + 2, imageRect.y() + 10)
                      << QPoint(imageRect.x() + imageRect.width() - 2, imageRect.y() + 10)
@@ -117,12 +104,10 @@ void CellWidget::paintEvent(QPaintEvent* event)
                 painter.drawPolygon(roof);
             }
 
-            // Рисуем компактную подложку цвета игрока
             painter.setBrush(ownerColor);
             painter.setPen(QPen(Qt::black, 1));
             painter.drawRect(footerRect);
 
-            // Отображаем этап строительства на подложке
             if (!building->getIsCompleted()) {
                 painter.setPen(Qt::white);
                 QFont progressFont = painter.font();
@@ -142,26 +127,21 @@ void CellWidget::paintEvent(QPaintEvent* event)
             }
 
         } else if (building->getType() == Building::MARKET) {
-            QPixmap marketTexture("D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/shop.jpg");
+            QPixmap marketTexture("../assets/textures/shop.jpg");
             if (!marketTexture.isNull()) {
-                // Масштабируем с сохранением пропорций и центрируем
                 QPixmap scaledTexture = marketTexture.scaled(imageRect.width(), imageRect.height(),
                                                              Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-                // Вычисляем позицию для центрирования
                 int x = imageRect.x() + (imageRect.width() - scaledTexture.width()) / 2;
                 int y = imageRect.y() + (imageRect.height() - scaledTexture.height()) / 2;
 
                 painter.drawPixmap(x, y, scaledTexture);
             } else {
-                // Fallback: рисуем стилизованный магазин если текстура не загрузилась
                 painter.setBrush(ownerColor.lighter(150));
                 painter.setPen(QPen(Qt::black, 1));
 
-                // Здание магазина (уменьшенное)
                 painter.drawRect(imageRect.x() + 5, imageRect.y() + 5, imageRect.width() - 10, imageRect.height() - 15);
 
-                // Вывеска
                 painter.setBrush(Qt::yellow);
                 painter.drawRect(imageRect.x() + 10, imageRect.y() + 2, imageRect.width() - 20, 6);
 
@@ -173,12 +153,10 @@ void CellWidget::paintEvent(QPaintEvent* event)
                                  Qt::AlignCenter, "SHOP");
             }
 
-            // Рисуем компактную подложку цвета игрока
             painter.setBrush(ownerColor);
             painter.setPen(QPen(Qt::black, 1));
             painter.drawRect(footerRect);
 
-            // Отображаем этап строительства на подложке
             if (!building->getIsCompleted()) {
                 painter.setPen(Qt::white);
                 QFont progressFont = painter.font();
@@ -199,7 +177,6 @@ void CellWidget::paintEvent(QPaintEvent* event)
         }
     }
 
-    // Отображаем номер клетки в левом верхнем углу
     painter.setPen(Qt::darkGray);
     QFont font = painter.font();
     font.setPointSize(8);

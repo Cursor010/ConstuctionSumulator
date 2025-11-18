@@ -20,7 +20,7 @@ GameWindow::GameWindow(SetupWindow* setupWindow, const QStringList& playerNames,
     currentMonth(0),
     currentPlayerIndex(0),
     currentPlayerHasBuilt(false),
-    buildingTypeToBuild(Building::NO_BUILDING) // Используем числовое значение
+    buildingTypeToBuild(Building::NO_BUILDING)
 {
     ui->setupUi(this);
 
@@ -44,7 +44,7 @@ GameWindow::~GameWindow()
 void GameWindow::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
-    QPixmap background("D:/Projects_C++/СonstructionSimulator/СonstructionSimulator/assets/textures/grass.jpg");
+    QPixmap background("../assets/textures/grass.jpg");
 
     if (!background.isNull()) {
         painter.drawPixmap(0, 0, width(), height(), background);
@@ -104,7 +104,6 @@ void GameWindow::updateGameState()
                                .arg(seasonName)
                                .arg(moneyInMillions, 0, 'f', 2));
 
-    // Показываем детальную информацию по зданиям текущего игрока
     QString buildingsInfo = "<h3 style='margin: 5px;'>Мои здания:</h3>";
     QList<Player::BuildingInfo> allBuildings = currentPlayer->getAllBuildings();
 
@@ -153,14 +152,12 @@ void GameWindow::updateGameState()
                              .arg(building.totalBuildTime);
             }
 
-            // Информация о рекламе
             if (building.type != Building::MARKET && building.housingAdBudget > 0) {
                 adInfo = QString(" | 📢 Реклама: %1 тыс.у.е.").arg(building.housingAdBudget, 0, 'f', 1);
             } else if (building.type == Building::MARKET && building.marketAdBudget > 0) {
                 adInfo = QString(" | 📢 Реклама: %1 тыс.у.е.").arg(building.marketAdBudget, 0, 'f', 1);
             }
 
-            // Форматируем прибыль/убыток
             double profitInThousands = building.monthlyProfit / 1000.0;
             if (building.monthlyProfit > 0) {
                 profitText = QString("💰 <span style='color: green;'>+%1 тыс.у.е.</span>")
@@ -174,7 +171,6 @@ void GameWindow::updateGameState()
                 profitText = "➖ 0 у.е.";
             }
 
-            // Добавляем информацию о цене для домов
             QString priceInfo = "";
             if (building.type != Building::MARKET) {
                 priceInfo = QString(" | Цена: %1 у.е./кв.м.").arg(building.pricePerSqm, 0, 'f', 0);
@@ -195,7 +191,6 @@ void GameWindow::updateGameState()
         }
     }
 
-    // Общая статистика игроков
     QString playersInfo = "<h3 style='margin: 5px;'>Статистика игроков:</h3>";
 
     for (int i = 0; i < players.size(); ++i) {
@@ -245,7 +240,6 @@ void GameWindow::updateGameState()
                            .arg(profitText);
     }
 
-    // Объединяем информацию о зданиях и статистику игроков
     QString allInfo = buildingsInfo + playersInfo;
     ui->playersInfoLabel->setText(allInfo);
 
@@ -263,7 +257,6 @@ void GameWindow::nextPlayer()
     if (currentPlayerIndex == 0) {
         currentMonth++;
 
-        // Обновляем рекламные бюджеты для всех игроков
         for (int i = 0; i < players.size(); ++i) {
             players[i]->updateAdBudgets();
         }
@@ -487,22 +480,18 @@ void GameWindow::on_setAdvertisingButton_clicked()
 
     Player* currentPlayer = players[currentPlayerIndex];
 
-    // Получаем значения рекламы из интерфейса
     double housingAd = ui->housingAdSpinBox->value();
     double marketAd = ui->marketAdSpinBox->value();
 
-    // Проверяем достаточно ли денег
-    double totalCost = (housingAd + marketAd) * 1000; // переводим в у.е.
+    double totalCost = (housingAd + marketAd) * 1000;
     if (currentPlayer->getMoney() < totalCost) {
         QMessageBox::warning(this, "Ошибка", "Недостаточно денег для установки рекламы!");
         return;
     }
 
-    // Устанавливаем рекламные бюджеты
     currentPlayer->setHousingAdBudget(housingAd);
     currentPlayer->setMarketAdBudget(marketAd);
 
-    // Списываем деньги
     currentPlayer->addMoney(-totalCost);
 
     updateGameState();

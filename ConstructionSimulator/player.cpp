@@ -31,24 +31,15 @@ void Player::updateAdBudgets() {
 void Player::processMonth(const QList<Player*>& allPlayers, int currentMonth) {
     if (isBankrupt) return;
 
-    // Очищаем прибыль за прошлый месяц
     for (int i = 0; i < buildings.size(); ++i) {
         buildings[i]->setMonthlyProfit(0.0);
     }
 
-    // 1. Выплата месячных затрат на строительство
     payConstructionCosts();
-
-    // 2. Продажа квартир в построенных домах
     sellHousing(allPlayers, currentMonth);
-
-    // 3. Получение дохода от магазинов
     receiveMarketRevenue(allPlayers, currentMonth);
-
-    // 4. Обновление цен на жилье
     updateHousingPrices();
 
-    // Запоминаем прибыли для отображения
     lastMonthProfits.clear();
     for (int i = 0; i < buildings.size(); ++i) {
         double profit = buildings[i]->getMonthlyProfit();
@@ -57,7 +48,6 @@ void Player::processMonth(const QList<Player*>& allPlayers, int currentMonth) {
         }
     }
 
-    // Проверка на банкротство
     if (money < 0) {
         isBankrupt = true;
         std::cout << "Player " << id << " is BANKRUPT!" << std::endl;
@@ -127,7 +117,6 @@ double Player::calculateHouseSales(Building* house, const QList<Player*>& allPla
 
     Season currentSeason = getSeason(currentMonth);
 
-    // Базовый спрос зависит от сезона
     double seasonalModifier = 1.0;
     switch(currentSeason) {
     case SPRING: seasonalModifier = GameConfig::SPRING_HOUSE_MODIFIER; break;
@@ -136,23 +125,13 @@ double Player::calculateHouseSales(Building* house, const QList<Player*>& allPla
     case WINTER: seasonalModifier = GameConfig::WINTER_HOUSE_MODIFIER; break;
     }
 
-    // Учитываем соседние магазины для увеличения спроса
     int neighborMarkets = countNeighborMarkets(house->getCellIndex(), allPlayers);
     double neighborBonus = 1.0 + (neighborMarkets * GameConfig::HOUSE_NEIGHBOR_BONUS);
-
-    // Эффект от рекламы жилья (0.5% за каждую 1 тыс. у.е. в этом и прошлом месяце)
     double adBonusHousing = 1.0 + (housingAdBudget + lastHousingAdBudget) * (0.5 / 100.0);
-
-    // Доступная для продажи площадь
     double availableArea = totalArea - currentSoldArea;
-
-    // Базовый объем продаж в этом месяце
     double baseMonthlySales = availableArea * GameConfig::BASE_HOUSE_SALES_RATE;
-
-    // Увеличиваем продажи за счет всех факторов
     double adjustedSales = baseMonthlySales * neighborBonus * seasonalModifier * adBonusHousing;
 
-    // Учитываем влияние цены на спрос
     double basePrice = 0;
     switch(house->getType()) {
     case Building::HOUSE_CONCRETE:
@@ -172,15 +151,12 @@ double Player::calculateHouseSales(Building* house, const QList<Player*>& allPla
     double priceFactor = 1.0 - (priceRatio - 1.0) * GameConfig::PRICE_SENSITIVITY * 100;
     priceFactor = qMax(0.1, priceFactor);
 
-    // Финальный объем продаж в этом месяце
     double monthlySalesArea = adjustedSales * priceFactor;
     monthlySalesArea = qMin(monthlySalesArea, availableArea);
     monthlySalesArea = qMax(0.0, monthlySalesArea);
 
-    // Обновляем проданную площадь
     house->setSoldArea(currentSoldArea + monthlySalesArea);
 
-    // Выручка от продаж в этом месяце
     double revenue = monthlySalesArea * house->getPricePerSqm();
 
     std::cout << "House sales calculation for cell " << house->getCellIndex() << ":\n"
@@ -204,17 +180,14 @@ void Player::receiveMarketRevenue(const QList<Player*>& allPlayers, int currentM
     for (int i = 0; i < buildings.size(); ++i) {
         Building* building = buildings[i];
         if (building->getType() == Building::MARKET && building->getIsCompleted()) {
-            // Базовая прибыль магазина
             double revenue = baseRevenue;
 
-            // Бонус за соседние дома
             int neighborHouses = countNeighborHouses(building->getCellIndex(), allPlayers);
             if (neighborHouses > 0) {
                 double neighborBonus = 1.0 + (neighborHouses * GameConfig::MARKET_NEIGHBOR_BONUS);
                 revenue *= neighborBonus;
             }
 
-            // Эффект от рекламы магазинов (3% за каждые 0.5 тыс. у.е.)
             double adBonusMarket = 1.0 + (marketAdBudget / 0.5) * (3.0 / 100.0);
             revenue *= adBonusMarket;
 
@@ -275,7 +248,6 @@ Building* Player::build(Building::Type type, int cellIndex) {
         cost = GameConfig::MARKET_COST;
     }
 
-    // Используем double для cost
     Building* newBuilding = new Building(type, id, buildTime, cost, color, cellIndex);
 
     if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
@@ -288,9 +260,6 @@ Building* Player::build(Building::Type type, int cellIndex) {
 
     return newBuilding;
 }
-// ... остальные методы Player (updateHousingPrices, countNeighborHouses, countNeighborMarkets,
-// getNeighborCells, getSeason, getHousingDemand, getMarketRevenue, hasBuildingInCell, calculateTotalCapital,
-// getAllBuildings, getHouseCells, getMarketCells)
 
 void Player::updateHousingPrices() {
     for (int i = 0; i < buildings.size(); ++i) {
