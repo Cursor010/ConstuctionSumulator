@@ -1,4 +1,4 @@
-QT       += core gui
+QT += core gui widgets
 
 # MSVC
 win32:QMAKE_CXXFLAGS += /utf-8

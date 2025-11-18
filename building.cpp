@@ -1,16 +1,12 @@
 #include "building.h"
 #include <iostream>
 
-Building::Building(Type t, int owner, int buildTime, int buildingCost, QColor color, int cellIndex)
+Building::Building(Type t, int owner, int buildTime, double buildingCost, QColor color, int cellIndex)
     : type(t), ownerId(owner), buildTime(buildTime), cost(buildingCost),
-    ownerColor(color), cellIndex(cellIndex)
+    ownerColor(color), cellIndex(cellIndex),
+    monthsBuilt(0), isCompleted(false), totalArea(0), soldArea(0),
+    pricePerSqm(0), monthlyProfit(0)
 {
-    monthsBuilt = 0;
-    isCompleted = false;
-    totalArea = 0;
-    soldArea = 0;
-    pricePerSqm = 0;
-    monthlyProfit = 0;
 }
 
 void Building::progressMonth() {

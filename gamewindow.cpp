@@ -6,6 +6,7 @@
 #include "building.h"
 #include "realestateagency.h"
 #include "setupwindow.h"
+#include "gameconfig.h"
 #include <QMessageBox>
 #include <QTimer>
 #include <QPainter>
@@ -19,7 +20,7 @@ GameWindow::GameWindow(SetupWindow* setupWindow, const QStringList& playerNames,
     currentMonth(0),
     currentPlayerIndex(0),
     currentPlayerHasBuilt(false),
-    buildingTypeToBuild(Building::NO_BUILDING)
+    buildingTypeToBuild(Building::NO_BUILDING) // Используем числовое значение
 {
     ui->setupUi(this);
 
@@ -281,6 +282,9 @@ void GameWindow::nextPlayer()
         }
     }
 
+    ui->housingAdSpinBox->cleanText();
+    ui->marketAdSpinBox->cleanText();
+
     currentPlayerHasBuilt = false;
     buildingTypeToBuild = Building::NO_BUILDING;
     updateGameState();
@@ -420,7 +424,7 @@ void GameWindow::on_backButton_clicked()
 void GameWindow::onCellClicked(int cellIndex)
 {
     if (buildingTypeToBuild != Building::NO_BUILDING && !cells[cellIndex]->getBuilding()) {
-        Building* newBuilding = players[currentPlayerIndex]->build(buildingTypeToBuild, cellIndex);
+        Building* newBuilding = players[currentPlayerIndex]->build(static_cast<Building::Type>(buildingTypeToBuild), cellIndex);
 
         if (newBuilding) {
             cells[cellIndex]->setBuilding(newBuilding);
@@ -474,7 +478,6 @@ void GameWindow::onCellClicked(int cellIndex)
     }
 }
 
-// Новый метод для установки рекламы
 void GameWindow::on_setAdvertisingButton_clicked()
 {
     if (currentPlayerHasBuilt) {
@@ -484,7 +487,7 @@ void GameWindow::on_setAdvertisingButton_clicked()
 
     Player* currentPlayer = players[currentPlayerIndex];
 
-    // Получаем значения рекламы из интерфейса (нужно добавить соответствующие виджеты в UI)
+    // Получаем значения рекламы из интерфейса
     double housingAd = ui->housingAdSpinBox->value();
     double marketAd = ui->marketAdSpinBox->value();
 
@@ -502,7 +505,6 @@ void GameWindow::on_setAdvertisingButton_clicked()
     // Списываем деньги
     currentPlayer->addMoney(-totalCost);
 
-   // currentPlayerHasBuilt = true;
     updateGameState();
 
     QMessageBox::information(this, "Успех",

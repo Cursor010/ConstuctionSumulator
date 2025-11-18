@@ -7,20 +7,20 @@ class Building
 {
 public:
     enum Type {
-        NO_BUILDING,
-        HOUSE_CONCRETE,  // панельный
-        HOUSE_WOOD,      // деревянный
-        HOUSE_BRICK,     // кирпичный
-        MARKET           // супермаркет
+        NO_BUILDING = 0,
+        HOUSE_CONCRETE = 1,
+        HOUSE_WOOD = 2,
+        HOUSE_BRICK = 3,
+        MARKET = 4
     };
 
-    Building(Type t, int owner, int buildTime, int buildingCost, QColor color, int cellIndex);
+    Building(Type t, int owner, int buildTime, double buildingCost, QColor color, int cellIndex);
 
     // Геттеры
     Type getType() const { return type; }
     int getOwnerId() const { return ownerId; }
     int getBuildTime() const { return buildTime; }
-    int getCost() const { return cost; }
+    double getCost() const { return cost; }
     QColor getOwnerColor() const { return ownerColor; }
     int getCellIndex() const { return cellIndex; }
     int getMonthsBuilt() const { return monthsBuilt; }
@@ -35,7 +35,7 @@ public:
     void setSoldArea(double area) { soldArea = area; }
     void setPricePerSqm(double price) { pricePerSqm = price; }
     void setMonthlyProfit(double profit) { monthlyProfit = profit; }
-    void addToMonthlyProfit(double profit) { monthlyProfit += profit; }
+    void addToMonthlyProfit(double amount) { monthlyProfit += amount; }
 
     void progressMonth();
 
@@ -43,10 +43,9 @@ private:
     Type type;
     int ownerId;
     int buildTime;
-    int cost;
+    double cost;
     QColor ownerColor;
     int cellIndex;
-
     int monthsBuilt;
     bool isCompleted;
     double totalArea;

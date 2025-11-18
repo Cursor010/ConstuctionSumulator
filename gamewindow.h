@@ -1,28 +1,19 @@
 #ifndef GAMEWINDOW_H
 #define GAMEWINDOW_H
 
-#include "building.h"
-#include "setupwindow.h"
-#include "player.h"
-#include "cellwidget.h"
-#include "building.h"
-#include "realestateagency.h"
-#include "gameconfig.h"  // ДОБАВЬТЕ ЭТУ СТРОКУ
-
 #include <QWidget>
-#include <QVector>
-#include <QMessageBox>
-#include <QTimer>
-#include <QPainter>
-#include <QPixmap>
-
-class SetupWindow;
-class Player;
-class CellWidget;
+#include <QList>
+#include <QColor>
+#include <QStringList>
 
 namespace Ui {
 class GameWindow;
 }
+
+class SetupWindow;
+class Player;
+class CellWidget;
+class Building;
 
 class GameWindow : public QWidget
 {
@@ -43,26 +34,25 @@ private slots:
     void on_skipTurnButton_clicked();
     void on_backButton_clicked();
     void onCellClicked(int cellIndex);
-
     void on_setAdvertisingButton_clicked();
 
 private:
+    Ui::GameWindow* ui;
+    SetupWindow* setupWindow;
+    int totalMonths;
+    int currentMonth;
+    int currentPlayerIndex;
+    bool currentPlayerHasBuilt;
+    int buildingTypeToBuild;
+    QList<Player*> players;
+    QList<CellWidget*> cells;
+
     void setupGame();
     void updateGameState();
     void nextPlayer();
     void showMonthlyProfit();
     void endGame();
     QString getSeasonName(int month) const;
-
-    Ui::GameWindow* ui;
-    SetupWindow* setupWindow;
-    QVector<Player*> players;
-    QVector<CellWidget*> cells;
-    int totalMonths;
-    int currentMonth;
-    int currentPlayerIndex;
-    bool currentPlayerHasBuilt;
-    Building::Type buildingTypeToBuild;
 };
 
 #endif // GAMEWINDOW_H

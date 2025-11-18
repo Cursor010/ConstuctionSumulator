@@ -229,9 +229,68 @@ void Player::receiveMarketRevenue(const QList<Player*>& allPlayers, int currentM
     }
 }
 
-// ... остальные методы без изменений (updateHousingPrices, countNeighborHouses, countNeighborMarkets,
+bool Player::canBuild(Building::Type type) {
+    if (isBankrupt) return false;
+
+    double cost = 0;
+    if (type == Building::HOUSE_CONCRETE) {
+        cost = GameConfig::CONCRETE_HOUSE_COST;
+    } else if (type == Building::HOUSE_WOOD) {
+        cost = GameConfig::WOOD_HOUSE_COST;
+    } else if (type == Building::HOUSE_BRICK) {
+        cost = GameConfig::BRICK_HOUSE_COST;
+    } else if (type == Building::MARKET) {
+        cost = GameConfig::MARKET_COST;
+    }
+    return money >= cost;
+}
+
+Building* Player::build(Building::Type type, int cellIndex) {
+    if (!canBuild(type) || hasBuildingInCell(cellIndex)) {
+        return nullptr;
+    }
+
+    int buildTime = 0;
+    double cost = 0;
+    double area = 0;
+    double basePrice = 0;
+
+    if (type == Building::HOUSE_CONCRETE) {
+        buildTime = GameConfig::CONCRETE_HOUSE_BUILD_TIME;
+        cost = GameConfig::CONCRETE_HOUSE_COST;
+        area = GameConfig::CONCRETE_HOUSE_AREA;
+        basePrice = GameConfig::CONCRETE_HOUSE_BASE_PRICE;
+    } else if (type == Building::HOUSE_WOOD) {
+        buildTime = GameConfig::WOOD_HOUSE_BUILD_TIME;
+        cost = GameConfig::WOOD_HOUSE_COST;
+        area = GameConfig::WOOD_HOUSE_AREA;
+        basePrice = GameConfig::WOOD_HOUSE_BASE_PRICE;
+    } else if (type == Building::HOUSE_BRICK) {
+        buildTime = GameConfig::BRICK_HOUSE_BUILD_TIME;
+        cost = GameConfig::BRICK_HOUSE_COST;
+        area = GameConfig::BRICK_HOUSE_AREA;
+        basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
+    } else if (type == Building::MARKET) {
+        buildTime = GameConfig::MARKET_BUILD_TIME;
+        cost = GameConfig::MARKET_COST;
+    }
+
+    // Используем double для cost
+    Building* newBuilding = new Building(type, id, buildTime, cost, color, cellIndex);
+
+    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
+        newBuilding->setTotalArea(area);
+        newBuilding->setPricePerSqm(basePrice);
+    }
+
+    buildings.append(newBuilding);
+    money -= cost;
+
+    return newBuilding;
+}
+// ... остальные методы Player (updateHousingPrices, countNeighborHouses, countNeighborMarkets,
 // getNeighborCells, getSeason, getHousingDemand, getMarketRevenue, hasBuildingInCell, calculateTotalCapital,
-// getAllBuildings, getHouseCells, getMarketCells, canBuild, build, getLastMonthProfits, clearLastMonthProfits)
+// getAllBuildings, getHouseCells, getMarketCells)
 
 void Player::updateHousingPrices() {
     for (int i = 0; i < buildings.size(); ++i) {
@@ -446,71 +505,4 @@ QList<int> Player::getMarketCells() const {
         }
     }
     return marketCells;
-}
-
-bool Player::canBuild(Building::Type type) {
-    if (isBankrupt) return false;
-
-    int cost = 0;
-    if (type == Building::HOUSE_CONCRETE) {
-        cost = GameConfig::CONCRETE_HOUSE_COST;
-    } else if (type == Building::HOUSE_WOOD) {
-        cost = GameConfig::WOOD_HOUSE_COST;
-    } else if (type == Building::HOUSE_BRICK) {
-        cost = GameConfig::BRICK_HOUSE_COST;
-    } else if (type == Building::MARKET) {
-        cost = GameConfig::MARKET_COST;
-    }
-    return money >= cost;
-}
-
-Building* Player::build(Building::Type type, int cellIndex) {
-    if (!canBuild(type) || hasBuildingInCell(cellIndex)) {
-        return nullptr;
-    }
-
-    int buildTime = 0;
-    int cost = 0;
-    double area = 0;
-    double basePrice = 0;
-
-    if (type == Building::HOUSE_CONCRETE) {
-        buildTime = GameConfig::CONCRETE_HOUSE_BUILD_TIME;
-        cost = GameConfig::CONCRETE_HOUSE_COST;
-        area = GameConfig::CONCRETE_HOUSE_AREA;
-        basePrice = GameConfig::CONCRETE_HOUSE_BASE_PRICE;
-    } else if (type == Building::HOUSE_WOOD) {
-        buildTime = GameConfig::WOOD_HOUSE_BUILD_TIME;
-        cost = GameConfig::WOOD_HOUSE_COST;
-        area = GameConfig::WOOD_HOUSE_AREA;
-        basePrice = GameConfig::WOOD_HOUSE_BASE_PRICE;
-    } else if (type == Building::HOUSE_BRICK) {
-        buildTime = GameConfig::BRICK_HOUSE_BUILD_TIME;
-        cost = GameConfig::BRICK_HOUSE_COST;
-        area = GameConfig::BRICK_HOUSE_AREA;
-        basePrice = GameConfig::BRICK_HOUSE_BASE_PRICE;
-    } else if (type == Building::MARKET) {
-        buildTime = GameConfig::MARKET_BUILD_TIME;
-        cost = GameConfig::MARKET_COST;
-    }
-
-    Building* newBuilding = new Building(type, id, buildTime, cost, color, cellIndex);
-
-    if (type == Building::HOUSE_CONCRETE || type == Building::HOUSE_WOOD || type == Building::HOUSE_BRICK) {
-        newBuilding->setTotalArea(area);
-        newBuilding->setPricePerSqm(basePrice);
-    }
-
-    buildings.append(newBuilding);
-    money -= cost;
-
-    return newBuilding;
-}
-
-QList<QPair<int, double>> Player::getLastMonthProfits() const {
-    return lastMonthProfits;
-}
-
-void Player::clearLastMonthProfits() {
-    lastMonthProfits.clear();
 }
