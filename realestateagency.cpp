@@ -80,10 +80,12 @@ void RealEstateAgency::satisfyDemand(double totalDemand, QList<HousingOffer>& of
 }
 
 void RealEstateAgency::processHousingSales(double totalDemand, const QList<Player*>& allPlayers) {
-    // Временно отключаем централизованную систему продаж
-    // Теперь продажи обрабатываются индивидуально для каждого игрока в методе sellHousing
-    qDebug() << "RealEstateAgency: Housing sales are now handled by individual players";
+    // ВКЛЮЧАЕМ централизованную систему продаж
+    QList<HousingOffer> offers = collectAllOffers(allPlayers);
+    sortOffersByPrice(offers);
+    satisfyDemand(totalDemand, offers, allPlayers);
 
-    // Можно оставить пустым или добавить дополнительную логику распределения спроса
-    // между игроками, если это необходимо
+    qDebug() << "RealEstateAgency: Centralized housing sales processed";
+    qDebug() << "Total demand:" << totalDemand << "sqm";
+    qDebug() << "Number of offers:" << offers.size();
 }
